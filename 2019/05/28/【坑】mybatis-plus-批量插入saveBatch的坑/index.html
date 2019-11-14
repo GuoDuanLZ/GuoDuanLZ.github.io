@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    
+
+    <title>
+      【坑】mybatis plus 批量插入saveBatch的坑 | 果断的荔枝 
+    </title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+      <meta name="author" content="wz">
+    
+    
+
+    <meta name="description" content="调用mybatis plus的saveBatch方法一次性插入一千条数据很慢，到底是什么原因呢？">
+<meta name="keywords" content="坑,mybatis plus">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【坑】mybatis plus 批量插入saveBatch的坑 | 果断的荔枝">
+<meta property="og:url" content="http://yoursite.com/2019/05/28/【坑】mybatis-plus-批量插入saveBatch的坑/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="调用mybatis plus的saveBatch方法一次性插入一千条数据很慢，到底是什么原因呢？">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://cdn.sinaimg.cn.52ecy.cn/large/005BYqpgly1g41k30w0g3j30j604naad.jpg">
+<meta property="og:image" content="https://cdn.sinaimg.cn.52ecy.cn/large/005BYqpgly1g41kluhr8lj30jf0i0jt7.jpg">
+<meta property="og:updated_time" content="2019-11-14T06:48:09.002Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【坑】mybatis plus 批量插入saveBatch的坑 | 果断的荔枝">
+<meta name="twitter:description" content="调用mybatis plus的saveBatch方法一次性插入一千条数据很慢，到底是什么原因呢？">
+<meta name="twitter:image" content="https://cdn.sinaimg.cn.52ecy.cn/large/005BYqpgly1g41k30w0g3j30j604naad.jpg">
+    
+    
+    
+      <link rel="icon" type="image/x-icon" href="/favicon.png">
+    
+    <link rel="stylesheet" href="/css/uno.css">
+    <link rel="stylesheet" href="/css/highlight.css">
+    <link rel="stylesheet" href="/css/archive.css">
+    <link rel="stylesheet" href="/css/china-social-icon.css">
+
+</head>
+<body>
+
+    <span class="mobile btn-mobile-menu">
+        <i class="icon icon-list btn-mobile-menu__icon"></i>
+        <i class="icon icon-x-circle btn-mobile-close__icon hidden"></i>
+    </span>
+
+    
+
+<header class="panel-cover panel-cover--collapsed">
+
+
+  <div class="panel-main">
+
+  
+    <div class="panel-main__inner panel-inverted">
+    <div class="panel-main__content">
+
+        
+
+        <h1 class="panel-cover__title panel-title"><a href="/" title="link to homepage">果断的荔枝</a></h1>
+        <hr class="panel-cover__divider" />
+
+        
+        <p class="panel-cover__description">
+          技术分享记录
+        </p>
+        <hr class="panel-cover__divider panel-cover__divider--secondary" />
+        
+
+        <div class="navigation-wrapper">
+
+          <nav class="cover-navigation cover-navigation--primary">
+            <ul class="navigation">
+
+              
+                
+                <li class="navigation__item"><a href="/#blog" title="" class="blog-button">首页</a></li>
+              
+                
+                <li class="navigation__item"><a href="/archive" title="" class="">归档</a></li>
+              
+                
+                <li class="navigation__item"><a href="/about" title="" class="">关于</a></li>
+              
+
+            </ul>
+          </nav>
+
+          <!-- ----------------------------
+To add a new social icon simply duplicate one of the list items from below
+and change the class in the <i> tag to match the desired social network
+and then add your link to the <a>. Here is a full list of social network
+classes that you can use:
+
+    icon-social-500px
+    icon-social-behance
+    icon-social-delicious
+    icon-social-designer-news
+    icon-social-deviant-art
+    icon-social-digg
+    icon-social-dribbble
+    icon-social-facebook
+    icon-social-flickr
+    icon-social-forrst
+    icon-social-foursquare
+    icon-social-github
+    icon-social-google-plus
+    icon-social-hi5
+    icon-social-instagram
+    icon-social-lastfm
+    icon-social-linkedin
+    icon-social-medium
+    icon-social-myspace
+    icon-social-path
+    icon-social-pinterest
+    icon-social-rdio
+    icon-social-reddit
+    icon-social-skype
+    icon-social-spotify
+    icon-social-stack-overflow
+    icon-social-steam
+    icon-social-stumbleupon
+    icon-social-treehouse
+    icon-social-tumblr
+    icon-social-twitter
+    icon-social-vimeo
+    icon-social-xbox
+    icon-social-yelp
+    icon-social-youtube
+    icon-social-zerply
+    icon-mail
+
+-------------------------------->
+
+<!-- add social info here -->
+
+
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="panel-cover--overlay"></div>
+  </div>
+</header>
+
+    <div class="content-wrapper">
+        <div class="content-wrapper__inner entry">
+            
+
+<article class="post-container post-container--single">
+
+  <header class="post-header">
+    
+    <h1 class="post-title">【坑】mybatis plus 批量插入saveBatch的坑</h1>
+
+    
+
+    <div class="post-meta">
+      <time datetime="2019-05-28" class="post-meta__date date">2019-05-28</time> 
+
+      <span class="post-meta__tags tags">
+
+          
+            <font class="categories">
+            &#8226; 分类:
+            <a class="categories-link" href="/categories/坑/">坑</a>
+            </font>
+          
+
+          
+             &#8226; 标签:
+            <font class="tags">
+              <a class="tags-link" href="/tags/mybatis-plus/">mybatis plus</a>, <a class="tags-link" href="/tags/坑/">坑</a>
+            </font>
+          
+
+      </span>
+    </div>
+    
+    
+
+  </header>
+
+  <section id="post-content" class="article-content post">
+    <p>调用mybatis plus的saveBatch方法一次性插入一千条数据很慢，到底是什么原因呢？<br><a id="more"></a></p>
+<h3 id="问题发现"><a href="#问题发现" class="headerlink" title="问题发现"></a>问题发现</h3><p>最近公司业务有一个批量插入的操作，项目从一开始就用了mybatis plus这个工具，其中的saveBatch对批量插入很方便，我也首先选择了这个方法，写的时候没怎么注意，写完之后同事进行压力测试的时候发现<br>批量插入1000条数据就会很慢，大概有4秒左右，进行批量插入数据，要想保证速度的话一般会采用在xml中用foreach进行遍历插入，但是查了下资料发现mybatis plus在2.0后就去掉了这个功能<br><img src="https://cdn.sinaimg.cn.52ecy.cn/large/005BYqpgly1g41k30w0g3j30j604naad.jpg" alt=""><br>这是官方给出的答案，也就是不再支持这种操作了</p>
+<h3 id="问题探索"><a href="#问题探索" class="headerlink" title="问题探索"></a>问题探索</h3><ul>
+<li>探究一下mybatis plus的saveBatch是怎么操作的</li>
+</ul>
+<p>点开saveBatch<br><img src="https://cdn.sinaimg.cn.52ecy.cn/large/005BYqpgly1g41kluhr8lj30jf0i0jt7.jpg" alt=""><br>可以看到先是创建了一个batch的sqlSession，点进去看这个sqlSession</p>
+
+  </section>
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+<section class="post-comments">
+    <!-- id 将作为查询条件 -->
+    <span id="/2019/05/10/" class="leancloud-visitors" data-flag-title="hello-world">
+        <em class="post-meta-item-text">阅读量 </em>
+        <i class="leancloud-visitors-count">1000000</i>
+    </span>
+    <div id="vcomments"></div>
+        <script>
+            new Valine({
+                el: '#vcomments',
+                appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+                appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+                visitor: true // 阅读量统计
+            })
+        </script>
+    <!-- 将评论系统（例如Disqus、多说、友言、畅言等）提供的代码片段粘贴在这里 -->
+    
+</section>
+
+
+</article>
+
+
+            <footer class="footer">
+
+
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">本站总访问量👀<span id="busuanzi_value_site_pv"></span>次</span>
+        <br><br>
+        <span class="footer__copyright">&copy; 2019 🧑 wz </span>
+        <span class="footer__copyright"> 由<a href="https://hexo.io/">Hexo</a>强力驱动 | 主题<a href="https://github.com/someus/huno">Huno</a></span>
+    
+</footer>
+        </div>
+    </div>
+
+    <!-- js files -->
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/scale.fix.js"></script>
+    
+
+    
+
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript"> 
+        $(document).ready(function(){
+            MathJax.Hub.Config({ 
+                tex2jax: {inlineMath: [['[latex]','[/latex]'], ['\\(','\\)']]} 
+            });
+        });
+    </script>
+
+
+    
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/awesome-toc.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $.awesome_toc({
+                overlay: true,
+                contentId: "post-content",
+            });
+        });
+    </script>
+
+
+    
+    
+    <!--kill ie6 -->
+<!--[if IE 6]>
+  <script src="//letskillie6.googlecode.com/svn/trunk/2/zh_CN.js"></script>
+<![endif]-->
+
+</body>
+</html>
