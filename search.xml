@@ -39,7 +39,7 @@
       <link href="/2019/11/19/%E9%9A%8F%E7%AC%94191119/"/>
       <url>/2019/11/19/%E9%9A%8F%E7%AC%94191119/</url>
       
-        <content type="html"><![CDATA[<p>​    把自己前段时间的存货给发布了出来，感觉记录是个很有意义的事情，一直被拖延症给耽误，也有可能是有点完美主义，总想什么都好之后再行动，突然忘了要说什么了。。就这样吧，总之，我要继续更新博客了，最近换了新的公司和新环境，Java相关的估计暂时不会更新了，基本都是一些之前存的，有可能会优化或者添一些新的看法，下面说一下要更新的重点吧</p><ul><li><p>Kotlin</p><p>Kotlin是目前主要的开发语言，我是从Java一步步转向Kotlin，所以对Java-&gt;Kotlin的会比较友好一些</p><ul><li><p>Grpc</p><p>现在工作中正用到的，还是很有意思的，平时一些有用的也会记录下来</p></li><li><p>Jooq</p><p>是不是很多人没听说过</p></li></ul></li><li><p>Zookeeper</p><p>自己学习的一些总结</p></li><li><p>Docker</p><p>docker算是我学习过程中的一个工具吧，比如单机搭建zookeeper集群</p></li><li><p>Spring相关</p><p>spring怎么也跑不了</p></li><li><p>MySQL</p></li><li><p>Redis</p></li><li><p>Hbase</p></li><li><p>消息队列</p></li><li><p>ElasticSearch</p></li></ul><p>这么一列</p>]]></content>
+        <content type="html"><![CDATA[<p>​    把自己前段时间的存货给发布了出来，感觉记录是个很有意义的事情，一直被拖延症给耽误，也有可能是有点完美主义，总想什么都好之后再行动，突然忘了要说什么了。。就这样吧，总之，我要继续更新博客了，最近换了新的公司和新环境，Java相关的估计暂时不会更新了，基本都是一些之前存的，有可能会优化或者添一些新的看法，下面说一下要更新的重点吧</p><ul><li><p>Kotlin</p><p>Kotlin是目前主要的开发语言，我是从Java一步步转向Kotlin，所以对Java-&gt;Kotlin的会比较友好一些</p></li><li><p>Grpc</p><p>  现在工作中正用到的，还是很有意思的，平时一些有用的也会记录下来</p></li><li><p>Jooq</p><p>  是不是很多人没听说过，也是一款很优秀的ORM，速度比较快，效率高，我是之前使用Mybatis了，从目前的使用来说，配合着kotlin基本能和Mybatis媲美，因为我比较熟悉Mybatis还是比较偏向他的。相较于Mybatis发现Jooq有个明显的缺点是处理关联表一对多，等的情况不如Mybatis的ResultMap来的舒服，一直没有找到完美的替代方案，有熟悉的小伙伴可以给我留言，一块探讨</p></li><li><p>Zookeeper</p><p>自己学习的一些总结</p></li><li><p>Docker</p><p>docker算是我学习过程中的一个工具吧，比如单机搭建zookeeper集群</p></li><li><p>Spring相关</p><p>spring怎么也跑不了</p></li><li><p>MySQL</p></li><li><p>Redis</p></li><li><p>Hbase</p></li><li><p>消息队列</p></li><li><p>ElasticSearch</p></li></ul><p>这么一列</p>]]></content>
       
       
       <categories>
@@ -117,9 +117,9 @@
             
             <tag> 源码 </tag>
             
-            <tag> String </tag>
-            
             <tag> Java8 </tag>
+            
+            <tag> String </tag>
             
         </tags>
       
@@ -148,9 +148,9 @@
             
             <tag> 源码 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> Java集合 </tag>
+            
+            <tag> Java8 </tag>
             
             <tag> LinkList </tag>
             
@@ -181,11 +181,11 @@
             
             <tag> 源码 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> Java集合 </tag>
             
             <tag> ArrayList </tag>
+            
+            <tag> Java8 </tag>
             
         </tags>
       
@@ -214,9 +214,9 @@
             
             <tag> 源码 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> Java集合 </tag>
+            
+            <tag> Java8 </tag>
             
             <tag> HashMap </tag>
             
