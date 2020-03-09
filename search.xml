@@ -4,19 +4,6 @@
   
     
     <entry>
-      <title>Kotlin-枚举</title>
-      <link href="/2019/12/07/Kotlin-%E6%9E%9A%E4%B8%BE/"/>
-      <url>/2019/12/07/Kotlin-%E6%9E%9A%E4%B8%BE/</url>
-      
-        <content type="html"><![CDATA[<meta name="referrer" content="no-referrer">]]></content>
-      
-      
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Kotlin-泛型</title>
       <link href="/2019/12/07/Kotlin-%E6%B3%9B%E5%9E%8B/"/>
       <url>/2019/12/07/Kotlin-%E6%B3%9B%E5%9E%8B/</url>
@@ -260,9 +247,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> LinkList </tag>
-            
             <tag> Java8 </tag>
+            
+            <tag> LinkList </tag>
             
         </tags>
       
@@ -293,9 +280,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> ArrayList </tag>
+            
+            <tag> Java8 </tag>
             
         </tags>
       
