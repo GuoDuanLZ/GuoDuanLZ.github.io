@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>Kotlin-枚举</title>
+      <link href="/2020/03/07/Kotlin-%E6%9E%9A%E4%B8%BE/"/>
+      <url>/2020/03/07/Kotlin-%E6%9E%9A%E4%B8%BE/</url>
+      
+        <content type="html"><![CDATA[<meta name="referrer" content="no-referrer"><ul><li><h3 id="Java中枚举"><a href="#Java中枚举" class="headerlink" title="Java中枚举"></a>Java中枚举</h3><ul><li><p>基础用法：</p><p>定义：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Color &#123;</span><br><span class="line">    RED,GREEN</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Color &#123;</span><br><span class="line">    RED(<span class="string">"红"</span>,<span class="number">123</span>),GREEN(<span class="string">"绿"</span>,<span class="number">456</span>);</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> Integer value;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Color</span><span class="params">(String name,Integer value)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">        <span class="keyword">this</span>.value = value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li></ul></li><li><h3 id="Kotlin中枚举"><a href="#Kotlin中枚举" class="headerlink" title="Kotlin中枚举"></a>Kotlin中枚举</h3><ul><li><p>基础用法：</p><p>定义：</p><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorKt</span></span>()&#123;</span><br><span class="line">    RED,GREEN</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">enum</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorKt</span></span>(<span class="keyword">val</span> name: String,<span class="keyword">val</span> value: <span class="built_in">Int</span>)&#123;</span><br><span class="line">    RED(<span class="string">"红色"</span>,<span class="number">1</span>),GREEN(<span class="string">"绿色"</span>,<span class="number">2</span>);<span class="comment">// Kotlin中唯一一个需要加分号的地方</span></span><br><span class="line">  <span class="function"><span class="keyword">fun</span> <span class="title">rg</span><span class="params">()</span></span> = ()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>Kotlin中定义枚举和Java中不太一样，Kotlin中的enum是软关键字，只有当它出现在class前面的时候它才有特殊的意义，否则是可以当一个普通名称来使用的，枚举类和普通类声明类似</p></li></ul></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Kotlin </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Kotlin </tag>
+            
+            <tag> 枚举 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Kotlin-泛型</title>
       <link href="/2019/12/07/Kotlin-%E6%B3%9B%E5%9E%8B/"/>
       <url>/2019/12/07/Kotlin-%E6%B3%9B%E5%9E%8B/</url>
@@ -280,9 +307,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> ArrayList </tag>
-            
             <tag> Java8 </tag>
+            
+            <tag> ArrayList </tag>
             
         </tags>
       
@@ -313,9 +340,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> HashMap </tag>
+            
+            <tag> Java8 </tag>
             
         </tags>
       
