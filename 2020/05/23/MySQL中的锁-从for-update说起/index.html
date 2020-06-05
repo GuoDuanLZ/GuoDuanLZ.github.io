@@ -1,9 +1,7 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>MySQL中的锁-从for update说起 | 果断的荔枝</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask="" sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">MySQL中的锁-从for update说起</h1><a id="logo" href="/.">果断的荔枝</a><p class="description">技术分享</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 时间轴</i></a><a href="/about/"><i class="fa fa-user"> 关于我</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">MySQL中的锁-从for update说起</h1><div class="post-meta">May 23, 2020<span> | </span><span class="category"><a href="/categories/MySQL/">MySQL</a></span><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2020/05/23/MySQL中的锁-从for-update说起/#vcomment"><span class="valine-comment-count" data-xid="/2020/05/23/MySQL中的锁-从for-update说起/"></span><span> 条评论</span></a><div class="post-content"><meta name="referrer" content="no-referrer">
 
-
-
 <h3 id="缘起："><a href="#缘起：" class="headerlink" title="缘起："></a>缘起：</h3><p>有一张表如下图：</p>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200602224524398.png" alt="image-20200602224524398"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7vnhv1xj30oo07sjtx.jpg" alt="image-20200602224524398"></p>
 <p>然后有两种情况进行加锁</p>
 <h4 id="情况一："><a href="#情况一：" class="headerlink" title="情况一："></a>情况一：</h4><table>
 <thead>
@@ -112,19 +110,19 @@
 </ul>
 <p>下面我们来通过for update的例子来看一下加锁情况：</p>
 <h3 id="举例详解"><a href="#举例详解" class="headerlink" title="举例详解"></a>举例详解</h3><p>所用到的表</p>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604213516492.png" alt="image-20200604213516492"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7vunymlj314c0aatcq.jpg" alt="image-20200604213516492"></p>
 <p>有两种不同的隔离等级（RC和RR）的数据库，有两张字段和数据一样的表，其中id为自增主键，uni_index被设置了唯一索引，norm_index设置了普通索引，no_index没有索引，然后我们通过对这两张表加锁进行举例分析，加锁情况在MySQL8.0中可以在performance_schema库中的data_locks表中查看</p>
 <p>####走主键或唯一索引加锁情况</p>
 <p>#####命中一条：</p>
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where uni_index = 10 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604214704331.png" alt="image-20200604214704331"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7w5axwwj312u04saax.jpg" alt="image-20200604214704331"></p>
 <p>其中，X,REC_NOT_GAP代表的就是我们上面说的行锁(Record Locks)，此时锁住了id为1这一行，然后给表加了一个意向锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where uni_index = 10 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604214704331.png" alt="image-20200604214704331"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wja098j312u04sabb.jpg" alt="image-20200604214704331"></p>
 <p>情况一样</p>
 </li>
 </ul>
@@ -132,16 +130,16 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where uni_index = 100 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604215828118.png" alt="image-20200604215828118"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wjsypwj31a004mt9f.jpg" alt="image-20200604215828118"></p>
 <p>仅仅给表加了一个意向锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where uni_index = 100 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604222818183.png" alt="image-20200604222818183"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wghio2j31ae03m0tn.jpg" alt="image-20200604222818183"></p>
 <p>这里出现了两个陌生东西，一个是LOCK_MODE中的X：代表是加了一个Next-Key Locks，一个是LOCK_DATA中的supremum pseudo-record代表不存在的无穷大的值。</p>
 <p>在这里我们去查询了一个uni_index不存在的且大于表中最大数据的数，所以加了一个Next-Key Locks，而这个Next-Key Locks锁的是一个不存在的无穷大的值，即锁住了表中现存的最大值到不存在无穷大的值中间的间隙和这个不存在无穷大的这一行，其实就是在最大记录后面加了一个间隙锁，如果uni_index=11的话，按照推断应该是在10-20之间加一个间隙锁，我们来试一下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where uni_index = 11 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605003519686.png" alt="image-20200605003519686"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wg1zxkj315a04awfd.jpg" alt="image-20200605003519686"></p>
 <p>这里的LOCK_MODE为X,GAP意味着在当前LOCK_DATA前到上一条记录中间加了个间隙锁</p>
 <p>走唯一索引总结：当走唯一索引时，在命中的情况下RC和RR的表现一致，都是只锁当前唯一行，并且给表加一个意向锁，但是当不命中时RR级别会加一个锁，锁住未命中的那个间隙。</p>
 </li>
@@ -151,12 +149,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 100 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200604222215932.png" alt="image-20200604222215932"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wl5d64j31am05mgn1.jpg" alt="image-20200604222215932"></p>
 <p>仅锁住了id为1的这一行，依旧为行锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 100 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605091449642.png" alt="image-20200605091449642"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wfjrrhj312q06kq4g.jpg" alt="image-20200605091449642"></p>
 <p>给命中的那条记录加一个行锁和next-key lock，以及前条记录加一个间隙锁，最终表现为id为1的这条记录的前面和后面都加了间隙锁，本身加了一个行锁</p>
 </li>
 </ul>
@@ -164,12 +162,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 200 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605092730771.png" alt="image-20200605092730771"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7whg7g3j3128072taj.jpg" alt="image-20200605092730771"></p>
 <p>给命中记录加行锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 200 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605092900274.png" alt="image-20200605092900274"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wieqtxj312o08m0v0.jpg" alt="image-20200605092900274"></p>
 <p>最终表现为(1,4]这个区间被加了锁</p>
 </li>
 </ul>
@@ -177,12 +175,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 201 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605094806274.png" alt="image-20200605094806274"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wf3acoj315a046mxr.jpg" alt="image-20200605094806274"></p>
 <p>只加了一个意向锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where norm_index = 201 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605095015038.png" alt="image-20200605095015038"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wemcjij314y04cq3t.jpg" alt="image-20200605095015038"></p>
 <p>和唯一索引加锁情况一致，把没有查询到的这个区间给锁住了</p>
 </li>
 </ul>
@@ -190,12 +188,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 1000 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605095257183.png" alt="image-20200605095257183"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7whxnh6j315804gwfd.jpg" alt="image-20200605095257183"></p>
 <p>仅加了一个行锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 1000 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605095619010.png" alt="image-20200605095619010"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wgyrxnj315o09cjtp.jpg" alt="image-20200605095619010"></p>
 <p>全部行都加了next-key lock，这意味着无穷小到无穷大都被锁了：1有next-key lock意味着1前面的空隙（无穷小）及1本身被锁了，supremum pseudo-record意味着这个不存在的最大值和5之间的空隙也被锁住了，这种给人的感觉是这整张表都被锁了，其实并不是</p>
 </li>
 </ul>
@@ -203,12 +201,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 2000 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605100214081.png" alt="image-20200605100214081"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7we5oedj314u05g0tz.jpg" alt="image-20200605100214081"></p>
 <p>好像没啥特殊的，和前面有索引一样，但是实际情况并不是这样的，当没有索引的情况下，MySQL会给所有的行加上行锁，但是在MySQL Server层会把一些不满足条件的给过滤掉了，虽然这违反了二段锁协议的约束，但是却提高了效率。</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 2000 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605100742206.png" alt="image-20200605100742206"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wkab2yj315g09gace.jpg" alt="image-20200605100742206"></p>
 <p>和命中一条一样，把所有行及空隙全锁了</p>
 </li>
 </ul>
@@ -216,12 +214,12 @@
 <ul>
 <li><p><strong>RC级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 2001 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605100912035.png" alt="image-20200605100912035"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wkrofrj315m03ggm5.jpg" alt="image-20200605100912035"></p>
 <p>只加了一个意向锁</p>
 </li>
 <li><p><strong>RR级别</strong></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">begin;</span><br><span class="line">select * from lock_demo where no_index = 2001 for update</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/butter/OneDrive/Blog/WzBlog/source/_posts/MySQL中的锁-从for-update说起.assets/image-20200605101011056.png" alt="image-20200605101011056"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7wlmfqij315m09cwgr.jpg" alt="image-20200605101011056"></p>
 <p>由此可以看出RR下只要是不走索引，就会把所有的行和间隙都锁掉</p>
 </li>
 </ul>
@@ -246,7 +244,7 @@ window.valine = new Valine({
   guest_info:guest_info,
   pageSize:'10',
   visitor:'true'
-})</script></div></div></div><div class="pure-u-1 pure-u-md-1-4"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java源码解析/">Java源码解析</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kotlin/">Kotlin</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/LeetCode/">LeetCode</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/坑/">坑</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Docker/" style="font-size: 15px;">Docker</a> <a href="/tags/zookeeper/" style="font-size: 15px;">zookeeper</a> <a href="/tags/容器/" style="font-size: 15px;">容器</a> <a href="/tags/Docker-Compose/" style="font-size: 15px;">Docker Compose</a> <a href="/tags/Kotlin/" style="font-size: 15px;">Kotlin</a> <a href="/tags/泛型/" style="font-size: 15px;">泛型</a> <a href="/tags/枚举/" style="font-size: 15px;">枚举</a> <a href="/tags/LeetCode/" style="font-size: 15px;">LeetCode</a> <a href="/tags/算法/" style="font-size: 15px;">算法</a> <a href="/tags/数据结构/" style="font-size: 15px;">数据结构</a> <a href="/tags/数组/" style="font-size: 15px;">数组</a> <a href="/tags/位运算/" style="font-size: 15px;">位运算</a> <a href="/tags/165周赛/" style="font-size: 15px;">165周赛</a> <a href="/tags/坑/" style="font-size: 15px;">坑</a> <a href="/tags/mybatis-plus/" style="font-size: 15px;">mybatis plus</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/tags/ArrayList/" style="font-size: 15px;">ArrayList</a> <a href="/tags/Java8/" style="font-size: 15px;">Java8</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/HashMap/" style="font-size: 15px;">HashMap</a> <a href="/tags/LinkList/" style="font-size: 15px;">LinkList</a> <a href="/tags/String/" style="font-size: 15px;">String</a> <a href="/tags/StringBuild/" style="font-size: 15px;">StringBuild</a> <a href="/tags/StringBuffer/" style="font-size: 15px;">StringBuffer</a> <a href="/tags/随笔/" style="font-size: 15px;">随笔</a> <a href="/tags/计划/" style="font-size: 15px;">计划</a> <a href="/tags/日常/" style="font-size: 15px;">日常</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/05/23/MySQL中的锁-从for-update说起/">MySQL中的锁-从for update说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/07/Kotlin-枚举/">Kotlin-枚举</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/12/07/Kotlin-泛型/">Kotlin-泛型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/12/02/LeetCode1275-找出井字棋的获胜者-Kotlin/">LeetCode1275-找出井字棋的获胜者 Kotlin</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/28/LeetCode167-两数之和-II-输入有序数组-Kotlin实现/">LeetCode167-两数之和 II - 输入有序数组 Kotlin实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/20/Docker容器管理/">Docker容器管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/随笔191119/">随笔191119</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-StringBuild和StringBuffer/">【源码解析】Java8-StringBuild和StringBuffer</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-String/">【源码解析】Java8-String</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-LinkList/">【源码解析】Java8-LinkList</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.fydxyz666.com/" title="飞扬的小智" target="_blank">飞扬的小智</a><ul></ul><a href="http://www.orangeash.cn/" title="Ash" target="_blank">Ash</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2020 <a href="/." rel="nofollow">果断的荔枝.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+})</script></div></div></div><div class="pure-u-1 pure-u-md-1-4"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java源码解析/">Java源码解析</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kotlin/">Kotlin</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/LeetCode/">LeetCode</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/坑/">坑</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Docker/" style="font-size: 15px;">Docker</a> <a href="/tags/zookeeper/" style="font-size: 15px;">zookeeper</a> <a href="/tags/容器/" style="font-size: 15px;">容器</a> <a href="/tags/Docker-Compose/" style="font-size: 15px;">Docker Compose</a> <a href="/tags/Kotlin/" style="font-size: 15px;">Kotlin</a> <a href="/tags/泛型/" style="font-size: 15px;">泛型</a> <a href="/tags/LeetCode/" style="font-size: 15px;">LeetCode</a> <a href="/tags/算法/" style="font-size: 15px;">算法</a> <a href="/tags/数据结构/" style="font-size: 15px;">数据结构</a> <a href="/tags/数组/" style="font-size: 15px;">数组</a> <a href="/tags/位运算/" style="font-size: 15px;">位运算</a> <a href="/tags/165周赛/" style="font-size: 15px;">165周赛</a> <a href="/tags/枚举/" style="font-size: 15px;">枚举</a> <a href="/tags/源码/" style="font-size: 15px;">源码</a> <a href="/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/tags/LinkList/" style="font-size: 15px;">LinkList</a> <a href="/tags/Java8/" style="font-size: 15px;">Java8</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/HashMap/" style="font-size: 15px;">HashMap</a> <a href="/tags/ArrayList/" style="font-size: 15px;">ArrayList</a> <a href="/tags/坑/" style="font-size: 15px;">坑</a> <a href="/tags/mybatis-plus/" style="font-size: 15px;">mybatis plus</a> <a href="/tags/String/" style="font-size: 15px;">String</a> <a href="/tags/StringBuild/" style="font-size: 15px;">StringBuild</a> <a href="/tags/StringBuffer/" style="font-size: 15px;">StringBuffer</a> <a href="/tags/随笔/" style="font-size: 15px;">随笔</a> <a href="/tags/计划/" style="font-size: 15px;">计划</a> <a href="/tags/日常/" style="font-size: 15px;">日常</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/05/23/MySQL中的锁-从for-update说起/">MySQL中的锁-从for update说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/07/Kotlin-枚举/">Kotlin-枚举</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/12/07/Kotlin-泛型/">Kotlin-泛型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/12/02/LeetCode1275-找出井字棋的获胜者-Kotlin/">LeetCode1275-找出井字棋的获胜者 Kotlin</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/28/LeetCode167-两数之和-II-输入有序数组-Kotlin实现/">LeetCode167-两数之和 II - 输入有序数组 Kotlin实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/20/Docker容器管理/">Docker容器管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/随笔191119/">随笔191119</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-StringBuild和StringBuffer/">【源码解析】Java8-StringBuild和StringBuffer</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-String/">【源码解析】Java8-String</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/19/【源码解析】Java8-LinkList/">【源码解析】Java8-LinkList</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.fydxyz666.com/" title="飞扬的小智" target="_blank">飞扬的小智</a><ul></ul><a href="http://www.orangeash.cn/" title="Ash" target="_blank">Ash</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2020 <a href="/." rel="nofollow">果断的荔枝.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
 if (search_path.length == 0) {
    search_path = 'search.xml';
 }
