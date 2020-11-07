@@ -37,7 +37,7 @@
       <link href="/2020/11/03/Mysql%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/"/>
       <url>/2020/11/03/Mysql%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</url>
       
-        <content type="html"><![CDATA[<meta name="referrer" content="no-referrer">]]></content>
+        <content type="html"><![CDATA[<h3 id="数字类型"><a href="#数字类型" class="headerlink" title="数字类型"></a>数字类型</h3><p>常用到的数字类型及存储空间如下：</p><table><thead><tr><th>数据类型</th><th>存储空间</th><th>举例</th></tr></thead><tbody><tr><td>tinyint</td><td>1 byte</td><td></td></tr><tr><td>smallint</td><td>2 bytes</td><td></td></tr><tr><td>mediumint</td><td>3 bytes</td><td></td></tr><tr><td>int</td><td>4 bytes</td><td></td></tr><tr><td>bigint</td><td>8 bytes</td><td></td></tr><tr><td>float（p）</td><td>4 bytes if 0 &lt;= <strong>p</strong> &lt;= 24, 8 bytes if 25 &lt;= <strong>p</strong> &lt;= 53</td><td></td></tr><tr><td>float</td><td>4 bytes</td><td></td></tr><tr><td>double（precision）</td><td>8 bytes</td><td></td></tr><tr><td>decimal（m,d）</td><td>Varies</td></tr></tbody></table><h4 id="整数类型："><a href="#整数类型：" class="headerlink" title="整数类型："></a>整数类型：</h4><p>​    第一个问题就是上表中的存储空间，其中1 byte = 8 位，1 byte能存储的数字大小为-128~127之间（-2^(n-1)~2^n-1,n为位数），而我们新建表的时候 经常会在数字类型后面跟数字，例如：tinyint(1)，tinyint(4)，int(11)等等，乍一看以为这个数字代表能存储多长的数字，其实并不是这样子的，不管后面的数字是多少，能存储的数字大小是固定的，例如tinyint(1)，tinyint(4)能存储的数字大小都是-128~127之间。</p><p>​    其实这个数字的作用是作为填充使用的，只有列指定了zerofill才是有用的，比如tinyint(4)此时要存一个2，其中查询结果为0002左边用0来填充够4位。这也就解释了我们刚开始说的tinyint(1)能存多少数字的问题</p><p>​    还有一个经常用到的知识点就是整数类型都有可选的unsigned属性，这个表示不允许负值，这样就可以使正数的上限提高一倍，例如我们上面提到的tinyint实用unsigned属性后可存储的范围为0~255。比如我们设置主键自增id时，把id值设为自增，然后设为unsigned是比较常用的用法。</p><h4 id="小数（实数）类型"><a href="#小数（实数）类型" class="headerlink" title="小数（实数）类型"></a>小数（实数）类型</h4><p><strong>我们都知道对于float和double存储小数是会有精度丢失的，这是为什么呢？</strong></p><p>​    对于计算机来说最终存储的数字都是二进制的，所以对于float和double来说，最终也是要转换成二进制，那么对于浮点数的二进制是怎么表示的呢：</p><p>​    首先是整数除2取余，得出结果一直除2，直到为0，然后把余数的结果倒序。然后小数部分，一直乘2取整，直到小数部分为0，然后整数结果正序排序。</p><p>​    比如8.475，整数部分转化为二进制为1000，小数部分转化为二进制为0100001。此时8.475可表示为1000.0100001，对于float类型来说只能存储4byte即为32位数字，但是一个小数转化为二进制，超出32位是很有可能的，当使用double会使范围更大，但是如<strong>8.26</strong>这个数字转化为二进制就会出现小数部分永远也没办法为0出    现循环，但是表示的范围是有限的，所以就导致了精度的丢失。</p><p><strong>MySQL中高精度存储实现</strong></p><p>所以在mysql5.0之后，MySQL不再使用CPU的浮点计算而是MySQL服务器自己实现了一套decimal，把数字打包进一个二进制字符串中（每4个字节存储9个数字），小数点使用一个字节，例如Decimal(18,9)，表示的是小数点前面9个数字，小数点后面9个数字，其中使用9个字节（整数4个小数4个标点1个）</p><p>在实际开发中，我们最好避免使用高精度的实现，一种好的实现是根据业务需求对 数据*10^精度，使用bigint进行存储</p><h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>在字符串类型中，我们最先想到也是最常用的类型应该是varchar类型，经常会使用varchar(32)，varchar(16)类似这样的去表示，经常会带一个数字，那数字代表什么意思呢，varchar(16)和char(16)又有什么区别。</p><h4 id="varchar和char"><a href="#varchar和char" class="headerlink" title="varchar和char"></a>varchar和char</h4><p>varchar和char从名字就可以看出varchar是可变长的，那既然是可变长的，那varchar(16)后面的这个数字又代表什么意思呢？首先，这里的数字和整数类型那里的数字是没关系的，其次，这里的数字也不是指能存储的字节长度是多少，这里的数字就是表示的能存多少个字符的个数，在utf-8的编码中，意味着可以插入多少个中文。并且，虽然指定了数字，对于varchar来说依旧是变长的，存了几个字符就占多少空间，这里数字仅仅是做一个长度的限制。而char(16)则不管有没有存这么多字符，一直会分配这么大的空间。虽然varchar是变长的，对于varchar(16)和varchar(32)存储一个字符串对于空间上是一直的，但是使用更长的列会导致消耗更多的内存。char的上限为255字节，varchar的上限65535字节。</p><p>当我们业务确定这个字段是一个定长并且不变的时候，使用char类型是一个好的方案，比如存储密码的md5值，因为char相比于varchar来说会产生更少的碎片，并且varchar会比char一直多一个字节用于长度的存储。</p><h4 id="varchar和text"><a href="#varchar和text" class="headerlink" title="varchar和text"></a>varchar和text</h4><p>当要存储的字符串太多时，text类型经常会被我们使用，但我们发现varchar的存储上限是很可观的，官方文档有说明varchar和text之间的转换关系：</p><ul><li>大于varchar（255）变为 tinytext</li><li>大于varchar（500）变为 text</li><li>大于varchar（20000）变为 mediumtext</li></ul><p>当超过255的长度后使用text和varchar没什么太大的区别（varchar可以设置默认值，text不可以）</p><h3 id="时间类型"><a href="#时间类型" class="headerlink" title="时间类型"></a>时间类型</h3><h4 id="DateTime和Timestamp"><a href="#DateTime和Timestamp" class="headerlink" title="DateTime和Timestamp"></a>DateTime和Timestamp</h4><p>​    DateTime可以存储从1001年到9999年的的值，精度为秒，使用8个字节进行存储，与时区无关的；而Timestamp是时间戳的意思，保存了从1970年1月1日午夜以来的秒数，使用4个字节进行存储，与时区有关，其中最重要的一个问题是最大可以存储到2038年。Timestamp比DateTime效率更高，不过缺点也是很明显的。</p><p>​    </p><p>​    </p>]]></content>
       
       
       <categories>
@@ -49,9 +49,9 @@
       
         <tags>
             
-            <tag> 总结 </tag>
-            
             <tag> MySQL </tag>
+            
+            <tag> 总结 </tag>
             
         </tags>
       
@@ -76,9 +76,9 @@
       
         <tags>
             
-            <tag> 记录 </tag>
-            
             <tag> 总结 </tag>
+            
+            <tag> 记录 </tag>
             
             <tag> 实战 </tag>
             
@@ -240,6 +240,8 @@
       
         <tags>
             
+            <tag> Kotlin </tag>
+            
             <tag> LeetCode </tag>
             
             <tag> 算法 </tag>
@@ -249,8 +251,6 @@
             <tag> 数组 </tag>
             
             <tag> 位运算 </tag>
-            
-            <tag> Kotlin </tag>
             
             <tag> 165周赛 </tag>
             
@@ -277,6 +277,8 @@
       
         <tags>
             
+            <tag> Kotlin </tag>
+            
             <tag> LeetCode </tag>
             
             <tag> 算法 </tag>
@@ -284,8 +286,6 @@
             <tag> 数据结构 </tag>
             
             <tag> 数组 </tag>
-            
-            <tag> Kotlin </tag>
             
         </tags>
       
@@ -473,9 +473,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> Java8 </tag>
-            
             <tag> ArrayList </tag>
+            
+            <tag> Java8 </tag>
             
         </tags>
       
@@ -506,9 +506,9 @@
             
             <tag> Java集合 </tag>
             
-            <tag> HashMap </tag>
-            
             <tag> Java8 </tag>
+            
+            <tag> HashMap </tag>
             
         </tags>
       
