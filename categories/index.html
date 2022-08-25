@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>分类</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+        <div id="title">
+          <h1>
+              <span style="font-size: 1em;">
+                  分类<br>
+              </span>
+              
+          </h1>
+      </div>
+        <div id="article">
+            
+            
+                <a id="categorieTage" href="#Docker" title="Docker" rel="1">Docker</a>
+            
+                <a id="categorieTage" href="#JVM" title="JVM" rel="4">JVM</a>
+            
+                <a id="categorieTage" href="#HBase" title="HBase" rel="1">HBase</a>
+            
+                <a id="categorieTage" href="#Kotlin" title="Kotlin" rel="4">Kotlin</a>
+            
+                <a id="categorieTage" href="#LeetCode" title="LeetCode" rel="2">LeetCode</a>
+            
+                <a id="categorieTage" href="#MySQL" title="MySQL" rel="3">MySQL</a>
+            
+                <a id="categorieTage" href="#protobuf" title="protobuf" rel="1">protobuf</a>
+            
+                <a id="categorieTage" href="#PostgreSQL" title="PostgreSQL" rel="1">PostgreSQL</a>
+            
+                <a id="categorieTage" href="#Redis" title="Redis" rel="2">Redis</a>
+            
+                <a id="categorieTage" href="#redis" title="redis" rel="1">redis</a>
+            
+                <a id="categorieTage" href="#RocketMQ" title="RocketMQ" rel="2">RocketMQ</a>
+            
+                <a id="categorieTage" href="#Spring" title="Spring" rel="1">Spring</a>
+            
+                <a id="categorieTage" href="#坑" title="坑" rel="1">坑</a>
+            
+                <a id="categorieTage" href="#Java源码解析" title="Java源码解析" rel="5">Java源码解析</a>
+            
+                <a id="categorieTage" href="#Kotlin教程" title="Kotlin教程" rel="1">Kotlin教程</a>
+            
+                <a id="categorieTage" href="#随笔" title="随笔" rel="1">随笔</a>
+            
+            <br>
+            
+                <div class="one-tag-list">
+                  <span id="Docker">
+                    <span class="tag-text">Docker</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/20/Docker容器管理/">
+                      <h2 class="post-title">
+                        Docker容器管理
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="JVM">
+                    <span class="tag-text">JVM</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/14/JVM内存区域/">
+                      <h2 class="post-title">
+                        JVM内存区域
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/15/Java内存模型/">
+                      <h2 class="post-title">
+                        Java内存模型
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/14/垃圾收集器和内存分配/">
+                      <h2 class="post-title">
+                        垃圾收集器和内存分配
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/14/虚拟机类加载/">
+                      <h2 class="post-title">
+                        虚拟机类加载
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="HBase">
+                    <span class="tag-text">HBase</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/11/16/HBase初识-简单介绍下HBase使用/">
+                      <h2 class="post-title">
+                        HBase初识-简单介绍下HBase使用
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="Kotlin">
+                    <span class="tag-text">Kotlin</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2021/03/14/Java泛型详解（对比Kotlin）/">
+                      <h2 class="post-title">
+                        Java泛型详解（对比Kotlin）
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2020/11/03/Kotlin中asSequence的使用场景/">
+                      <h2 class="post-title">
+                        Kotlin中asSequence的使用场景
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2020/12/22/Kotlin使用Jackson序列化中的一些问题/">
+                      <h2 class="post-title">
+                        Kotlin使用Jackson序列化中的一些问题
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2020/03/07/Kotlin-枚举/">
+                      <h2 class="post-title">
+                        Kotlin-枚举
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="LeetCode">
+                    <span class="tag-text">LeetCode</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/12/02/LeetCode1275-找出井字棋的获胜者-Kotlin/">
+                      <h2 class="post-title">
+                        LeetCode1275-找出井字棋的获胜者 Kotlin
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/28/LeetCode167-两数之和-II-输入有序数组-Kotlin实现/">
+                      <h2 class="post-title">
+                        LeetCode167-两数之和 II - 输入有序数组 Kotlin实现
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="MySQL">
+                    <span class="tag-text">MySQL</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/11/24/MySQL中的order-by-limit中的坑/">
+                      <h2 class="post-title">
+                        MySQL中的order by limit中的坑
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2020/05/23/MySQL中的锁-从for-update说起/">
+                      <h2 class="post-title">
+                        MySQL中的锁-从for update说起
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2020/11/03/Mysql中的数据类型/">
+                      <h2 class="post-title">
+                        MySQL中的数据类型
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="protobuf">
+                    <span class="tag-text">protobuf</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2021/03/01/Protocol-Buffer编码/">
+                      <h2 class="post-title">
+                        Protocol Buffer编码
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="PostgreSQL">
+                    <span class="tag-text">PostgreSQL</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/10/28/PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案/">
+                      <h2 class="post-title">
+                        PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="Redis">
+                    <span class="tag-text">Redis</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2021/07/11/Redis对象-String/">
+                      <h2 class="post-title">
+                        Redis对象-String
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2021/05/17/谈谈Redis分布式锁/">
+                      <h2 class="post-title">
+                        谈谈Redis分布式锁
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="redis">
+                    <span class="tag-text">redis</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2021/06/23/Redis数据结构-字典(dict)/">
+                      <h2 class="post-title">
+                        Redis数据结构-字典(dict)
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="RocketMQ">
+                    <span class="tag-text">RocketMQ</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/12/12/RocketMQ消息追踪相关源码分析/">
+                      <h2 class="post-title">
+                        RocketMQ消息追踪相关源码分析
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/">
+                      <h2 class="post-title">
+                        【源码分析】RocketMQ消息追踪源码详解
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="Spring">
+                    <span class="tag-text">Spring</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/08/01/Spring-Bean的注入/">
+                      <h2 class="post-title">
+                        Spring Bean的注入
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="坑">
+                    <span class="tag-text">坑</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/05/28/【坑】mybatis-plus-批量插入saveBatch的坑/">
+                      <h2 class="post-title">
+                        【坑】mybatis plus 批量插入saveBatch的坑
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="Java源码解析">
+                    <span class="tag-text">Java源码解析</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/【源码解析】Java8-LinkList/">
+                      <h2 class="post-title">
+                        【源码解析】Java8-LinkList
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/【源码解析】Java8-HashMap/">
+                      <h2 class="post-title">
+                        【源码解析】Java8-HashMap
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/【源码解析】Java8-ArrayList/">
+                      <h2 class="post-title">
+                        【源码解析】Java8-ArrayList
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/【源码解析】Java8-String/">
+                      <h2 class="post-title">
+                        【源码解析】Java8-String
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/【源码解析】Java8-StringBuild和StringBuffer/">
+                      <h2 class="post-title">
+                        【源码解析】Java8-StringBuild和StringBuffer
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="Kotlin教程">
+                    <span class="tag-text">Kotlin教程</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2020/09/18/从Java入门Kotlin-Kotlin类/">
+                      <h2 class="post-title">
+                        从Java入门Kotlin-Kotlin类
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+                <div class="one-tag-list">
+                  <span id="随笔">
+                    <span class="tag-text">随笔</span>
+                  </span>
+                  
+                            
+                  <div class="post-preview">
+                    <a href="/2019/11/19/随笔191119/">
+                      <h2 class="post-title">
+                        随笔191119
+                        
+                      </h2>
+                      
+                      
+                    </a>
+                  </div>
+                  
+                
+                </div>
+            
+
+
+            <br>
+            <hr>
+            <br>
+                <div id="article-next">
+                    <a href="/" data-toggle="tooltip" data-placement="top" title="果断的荔枝">返回首页 &rarr;</a>
+                </div>
+            <br><br>
+            <hr>
+        </div>
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="在新建表的时候我们经常会遇到tinyint(1)能存多少数字，varchar(32)到底能存多少个汉字等等的疑问，我在建表的时候也遇到了这样的困惑，经查阅资料理清了中间的关系，在此记录一下" />
+    <meta name="keywords" content="" />
+    <title>MySQL中的数据类型</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                MySQL中的数据类型<br>
+                
+                <p>作者：wz<br>编写：2020-11-03</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <h3 id="数字类型"><a href="#数字类型" class="headerlink" title="数字类型"></a>数字类型</h3><p>常用到的数字类型及存储空间如下：</p>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>存储空间</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tinyint</td>
+<td>1 byte</td>
+<td></td>
+</tr>
+<tr>
+<td>smallint</td>
+<td>2 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>mediumint</td>
+<td>3 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>int</td>
+<td>4 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>bigint</td>
+<td>8 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>float</td>
+<td>4 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>double（precision）</td>
+<td>8 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>decimal（m,d）</td>
+<td>Varies</td>
+</tr>
+</tbody>
+</table>
+<h4 id="整数类型："><a href="#整数类型：" class="headerlink" title="整数类型："></a>整数类型：</h4><p>​    第一个问题就是上表中的存储空间，其中1 byte = 8 位，1 byte能存储的数字大小为-128~127之间（-2^(n-1)~2^n-1,n为位数），而我们新建表的时候 经常会在数字类型后面跟数字，例如：tinyint(1)，tinyint(4)，int(11)等等，乍一看以为这个数字代表能存储多长的数字，其实并不是这样子的，不管后面的数字是多少，能存储的数字大小是固定的，例如tinyint(1)，tinyint(4)能存储的数字大小都是-128~127之间。</p>
+<p>​    其实这个数字的作用是作为填充使用的，只有列指定了zerofill才是有用的，比如tinyint(4)此时要存一个2，其中查询结果为0002左边用0来填充够4位。这也就解释了我们刚开始说的tinyint(1)能存多少数字的问题</p>
+<p>​    还有一个经常用到的知识点就是整数类型都有可选的unsigned属性，这个表示不允许负值，这样就可以使正数的上限提高一倍，例如我们上面提到的tinyint实用unsigned属性后可存储的范围为0~255。比如我们设置主键自增id时，把id值设为自增，然后设为unsigned是比较常用的用法。</p>
+<h4 id="小数（实数）类型"><a href="#小数（实数）类型" class="headerlink" title="小数（实数）类型"></a>小数（实数）类型</h4><p><strong>我们都知道对于float和double存储小数是会有精度丢失的，这是为什么呢？</strong></p>
+<p>​    对于计算机来说最终存储的数字都是二进制的，所以对于float和double来说，最终也是要转换成二进制，那么对于浮点数的二进制是怎么表示的呢：</p>
+<p>​    首先是整数除2取余，得出结果一直除2，直到为0，然后把余数的结果倒序。然后小数部分，一直乘2取整，直到小数部分为0，然后整数结果正序排序。</p>
+<p>​    比如8.475，整数部分转化为二进制为1000，小数部分转化为二进制为0100001。此时8.475可表示为1000.0100001，对于float类型来说只能存储4byte即为32位数字，但是一个小数转化为二进制，超出32位是很有可能的，当使用double会使范围更大，但是如<strong>8.26</strong>这个数字转化为二进制就会出现小数部分永远也没办法为0出    现循环，但是表示的范围是有限的，所以就导致了精度的丢失。</p>
+<p><strong>MySQL中高精度存储实现</strong></p>
+<p>所以在mysql5.0之后，MySQL不再使用CPU的浮点计算而是MySQL服务器自己实现了一套decimal，把数字打包进一个二进制字符串中（每4个字节存储9个数字），小数点使用一个字节，例如Decimal(18,9)，表示的是小数点前面9个数字，小数点后面9个数字，其中使用9个字节（整数4个小数4个标点1个）</p>
+<p>在实际开发中，我们最好避免使用高精度的实现，一种好的实现是根据业务需求对 数据*10^精度，使用bigint进行存储</p>
+<h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>在字符串类型中，我们最先想到也是最常用的类型应该是varchar类型，经常会使用varchar(32)，varchar(16)类似这样的去表示，经常会带一个数字，那数字代表什么意思呢，varchar(16)和char(16)又有什么区别。</p>
+<h4 id="varchar和char"><a href="#varchar和char" class="headerlink" title="varchar和char"></a>varchar和char</h4><p>varchar和char从名字就可以看出varchar是可变长的，那既然是可变长的，那varchar(16)后面的这个数字又代表什么意思呢？首先，这里的数字和整数类型那里的数字是没关系的，其次，这里的数字也不是指能存储的字节长度是多少，这里的数字就是表示的能存多少个字符的个数，在utf-8的编码中，意味着可以插入多少个中文。并且，虽然指定了数字，对于varchar来说依旧是变长的，存了几个字符就占多少空间，这里数字仅仅是做一个长度的限制。而char(16)则不管有没有存这么多字符，一直会分配这么大的空间。虽然varchar是变长的，对于varchar(16)和varchar(32)存储一个字符串对于空间上是一直的，但是使用更长的列会导致消耗更多的内存。char的上限为255字节，varchar的上限65535字节。</p>
+<p>当我们业务确定这个字段是一个定长并且不变的时候，使用char类型是一个好的方案，比如存储密码的md5值，因为char相比于varchar来说会产生更少的碎片，并且varchar会比char一直多一个字节用于长度的存储。</p>
+<h4 id="varchar和text"><a href="#varchar和text" class="headerlink" title="varchar和text"></a>varchar和text</h4><p>当要存储的字符串太多时，text类型经常会被我们使用，但我们发现varchar的存储上限是很可观的，官方文档有说明varchar和text之间的转换关系：</p>
+<ul>
+<li>大于varchar（255）变为 tinytext</li>
+<li>大于varchar（500）变为 text</li>
+<li>大于varchar（20000）变为 mediumtext</li>
+</ul>
+<p>当超过255的长度后使用text和varchar没什么太大的区别（varchar可以设置默认值，text不可以）</p>
+<h3 id="时间类型"><a href="#时间类型" class="headerlink" title="时间类型"></a>时间类型</h3><h4 id="DateTime和Timestamp"><a href="#DateTime和Timestamp" class="headerlink" title="DateTime和Timestamp"></a>DateTime和Timestamp</h4><p>​    DateTime可以存储从1001年到9999年的的值，精度为秒，使用8个字节进行存储，与时区无关的；而Timestamp是时间戳的意思，保存了从1970年1月1日午夜以来的秒数，使用4个字节进行存储，与时区有关，其中最重要的一个问题是最大可以存储到2038年。Timestamp比DateTime效率更高，不过缺点也是很明显的。</p>
+<p>​    </p>
+<p>​    </p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2020/11/03/Kotlin中asSequence的使用场景/" data-toggle="tooltip" data-placement="top" title="Kotlin中asSequence的使用场景">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2020/10/28/PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案/" data-toggle="tooltip" data-placement="top" title="PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

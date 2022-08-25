@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="之前有一篇文章通过在使用RocketMQ消息追踪功能遇到的问题及解决方法，与此同时简单看了下RocketMQ的源码，重点在问题解决上。在查问题过程中发现很少有文章来描述此功能从头到尾是如何实现的，然后我就研究了下，通过这篇文章来讲解一下。" />
+    <meta name="keywords" content="" />
+    <title>【源码分析】RocketMQ消息追踪源码详解</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                【源码分析】RocketMQ消息追踪源码详解<br>
+                
+                <p>作者：wz<br>编写：2021-04-29</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <meta name="referrer" content="no-referrer">
+
+<p>消息追踪有生产者发送消息追踪和消费者消费消息追踪，因为他们原理差不多，并且容易出现问题的地方主要集中在消费者消息追踪，所以这篇文章主要去讲一下消费者的消息追踪，而消费者又分为PullConsumer和PushConsumer，在消息追踪这块基本是一样的，所以最终选择的是PushConsumer的消费消息的消息追踪</p>
+<h3 id="消息追踪服务的初始化"><a href="#消息追踪服务的初始化" class="headerlink" title="消息追踪服务的初始化"></a>消息追踪服务的初始化</h3><p>消息追踪的初始化是随着消费者初始化进行初始化的，见下面的代码分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">DefaultMQPushConsumer.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">DefaultMQPushConsumer</span><span class="params">(<span class="keyword">final</span> String namespace, <span class="keyword">final</span> String consumerGroup, RPCHook rpcHook,</span></span></span><br><span class="line"><span class="function"><span class="params">        AllocateMessageQueueStrategy allocateMessageQueueStrategy, <span class="keyword">boolean</span> enableMsgTrace, <span class="keyword">final</span> String customizedTraceTopic)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.consumerGroup = consumerGroup;</span><br><span class="line">        <span class="keyword">this</span>.namespace = namespace;</span><br><span class="line">        <span class="keyword">this</span>.allocateMessageQueueStrategy = allocateMessageQueueStrategy;</span><br><span class="line">        defaultMQPushConsumerImpl = <span class="keyword">new</span> DefaultMQPushConsumerImpl(<span class="keyword">this</span>, rpcHook);</span><br><span class="line">        <span class="keyword">if</span> (enableMsgTrace) &#123;<span class="comment">// 是否开启消息追踪的标志</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                AsyncTraceDispatcher dispatcher = <span class="keyword">new</span> AsyncTraceDispatcher(consumerGroup, TraceDispatcher.Type.CONSUME, customizedTraceTopic, rpcHook);<span class="comment">// 行1.初始化异步Dispatcher</span></span><br><span class="line">                dispatcher.setHostConsumer(<span class="keyword">this</span>.getDefaultMQPushConsumerImpl());</span><br><span class="line">                traceDispatcher = dispatcher;<span class="comment">// 行2.把这个dispatcher记录到当前消费者下面的traceDispatcher这里需要记住</span></span><br><span class="line">                <span class="keyword">this</span>.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(</span><br><span class="line">                    <span class="keyword">new</span> ConsumeMessageTraceHookImpl(traceDispatcher));<span class="comment">// 行3.并且给当前的consumer注册了一个钩子</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                log.error(<span class="string">"system mqtrace hook init failed ,maybe can't send msg trace data"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>先分析<strong>行1</strong>：这里初始化了一个Dispatcher，我们来看一下这里是怎么进行初始化的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">AsyncTraceDispatcher</span><span class="params">(String group, Type type,String traceTopicName, RPCHook rpcHook)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// queueSize is greater than or equal to the n power of 2 of value</span></span><br><span class="line">        <span class="keyword">this</span>.queueSize = <span class="number">2048</span>;</span><br><span class="line">        <span class="keyword">this</span>.batchSize = <span class="number">100</span>;</span><br><span class="line">        <span class="keyword">this</span>.maxMsgSize = <span class="number">128000</span>;</span><br><span class="line">        <span class="keyword">this</span>.discardCount = <span class="keyword">new</span> AtomicLong(<span class="number">0L</span>);</span><br><span class="line">        <span class="keyword">this</span>.traceContextQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;TraceContext&gt;(<span class="number">1024</span>);</span><br><span class="line">        <span class="keyword">this</span>.group = group;</span><br><span class="line">        <span class="keyword">this</span>.type = type;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.appenderQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;Runnable&gt;(queueSize);<span class="comment">// 这个队列很重要要记住这个Dispatcher是有一个队列的这个队列里存的都是Runnable</span></span><br><span class="line">        <span class="keyword">if</span> (!UtilAll.isBlank(traceTopicName)) &#123;</span><br><span class="line">            <span class="keyword">this</span>.traceTopicName = traceTopicName;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.traceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.traceExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="comment">//</span></span><br><span class="line">            <span class="number">10</span>, <span class="comment">//</span></span><br><span class="line">            <span class="number">20</span>, <span class="comment">//</span></span><br><span class="line">            <span class="number">1000</span> * <span class="number">60</span>, <span class="comment">//</span></span><br><span class="line">            TimeUnit.MILLISECONDS, <span class="comment">//</span></span><br><span class="line">            <span class="keyword">this</span>.appenderQueue, <span class="comment">//</span></span><br><span class="line">            <span class="keyword">new</span> ThreadFactoryImpl(<span class="string">"MQTraceSendThread_"</span>));<span class="comment">// 初始化一个线程池</span></span><br><span class="line">        traceProducer = getAndCreateTraceProducer(rpcHook);<span class="comment">// 创建了一个生产者用于发送消息追踪相关消息</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>上面就初始化好了一个AsyncTraceDispatcher，然后<strong>行2</strong>把这个dispatcher给保存到了当前消费者。</p>
+<p>下面看一下<strong>行3</strong>中的这个Hook是个什么</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">ConsumeMessageTraceHookImpl.java</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConsumeMessageTraceHookImpl</span> <span class="keyword">implements</span> <span class="title">ConsumeMessageHook</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">ConsumeMessageTraceHookImpl</span><span class="params">(TraceDispatcher localDispatcher)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.localDispatcher = localDispatcher;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//先看下ConsumeMessageHook这个接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConsumeMessageHook</span> </span>&#123;</span><br><span class="line">    <span class="function">String <span class="title">hookName</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">consumeMessageBefore</span><span class="params">(<span class="keyword">final</span> ConsumeMessageContext context)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">consumeMessageAfter</span><span class="params">(<span class="keyword">final</span> ConsumeMessageContext context)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有个consumeMessageBefore和consumeMessageAfter，这名字起的还是很形象的，大致猜出他们是消息消费前消费后会去调用这两个方法。</p>
+<p>初始化这里先知道这些就可以了，总结来说记住如下三点就可以了：</p>
+<ol>
+<li>初始化了一个AsyncTraceDispatcher和一个ConsumeMessageTraceHookImpl并保存到了当前的消费者上</li>
+<li>其中AsyncTraceDispatcher里面有一个存Runnable的队列，一个线程池，一个生产者；</li>
+<li>ConsumeMessageTraceHookImpl有两个方法发消息前和发消息后会调用，并且也保存了上面的Dispatcher</li>
+</ol>
+<h3 id="消息追踪服务的启动"><a href="#消息追踪服务的启动" class="headerlink" title="消息追踪服务的启动"></a>消息追踪服务的启动</h3><p>当消费者初始化完毕后会调用其自己的start()方法进行消费者的启动，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">DefaultMQPushConsumer.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> MQClientException </span>&#123;</span><br><span class="line">        setConsumerGroup(NamespaceUtil.wrapNamespace(<span class="keyword">this</span>.getNamespace(), <span class="keyword">this</span>.consumerGroup));</span><br><span class="line">        <span class="keyword">this</span>.defaultMQPushConsumerImpl.start();<span class="comment">//行1.消费者启动，本文咱不细看，就知道启动了就可以</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> != traceDispatcher) &#123;<span class="comment">//通过判断是否有dispatcher来决定是否启动消息追踪，初始化那里我们知道这里是被保存了的</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                traceDispatcher.start(<span class="keyword">this</span>.getNamesrvAddr(), <span class="keyword">this</span>.getAccessChannel());<span class="comment">//行2.这里开始启动这个Dispatcher（调度器）</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (MQClientException e) &#123;</span><br><span class="line">                log.warn(<span class="string">"trace dispatcher start failed "</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>来看下<strong>行2</strong>Dispatcher是怎么启动的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">(String nameSrvAddr, AccessChannel accessChannel)</span> <span class="keyword">throws</span> MQClientException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (isStarted.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">            traceProducer.setNamesrvAddr(nameSrvAddr);</span><br><span class="line">            traceProducer.setInstanceName(TRACE_INSTANCE_NAME + <span class="string">"_"</span> + nameSrvAddr);</span><br><span class="line">            traceProducer.start();</span><br><span class="line">        &#125;<span class="comment">//行2.1.启动一个消息追踪的生产者</span></span><br><span class="line">        <span class="keyword">this</span>.accessChannel = accessChannel;</span><br><span class="line">        <span class="keyword">this</span>.worker = <span class="keyword">new</span> Thread(<span class="keyword">new</span> AsyncRunnable(), <span class="string">"MQ-AsyncTraceDispatcher-Thread-"</span> + dispatcherId);<span class="comment">//行2.2 开启了一个守护进程去运行AsyncRunnable</span></span><br><span class="line">        <span class="keyword">this</span>.worker.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">this</span>.worker.start();</span><br><span class="line">        <span class="keyword">this</span>.registerShutDownHook();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在行2.2我们看到有一个AsyncRunnable，看下这个类的run方法是啥</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> stopped;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (!stopped) &#123;</span><br><span class="line">      List&lt;TraceContext&gt; contexts = <span class="keyword">new</span> ArrayList&lt;TraceContext&gt;(batchSize);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; batchSize; i++) &#123;</span><br><span class="line">        TraceContext context = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="comment">//get trace data element from blocking Queue — traceContextQueue</span></span><br><span class="line">          context = traceContextQueue.poll(<span class="number">5</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (context != <span class="keyword">null</span>) &#123;</span><br><span class="line">          contexts.add(context);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (contexts.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        AsyncAppenderRequest request = <span class="keyword">new</span> AsyncAppenderRequest(contexts);</span><br><span class="line">        traceExecutor.submit(request);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (AsyncTraceDispatcher.<span class="keyword">this</span>.stopped) &#123;</span><br><span class="line">        <span class="keyword">this</span>.stopped = <span class="keyword">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里看到了一个熟悉的traceContextQueue，这也是初始化的时候我说需要记下来的，就是从这里面每5毫秒取出context然后包装成AsyncAppenderRequest，再扔到初始化的时候初始化的线程池。</p>
+<p>小结：当消费者启动的时候顺带开了一个守护进程，这个守护进程会一直去遍历一个队列从中取出context去跑。然后此时还剩下两个问题没有解决</p>
+<ol>
+<li>这个队列是怎么添加的数据</li>
+<li>这个AsyncAppenderRequest是怎么运行的</li>
+</ol>
+<h3 id="消息追踪服务的实现"><a href="#消息追踪服务的实现" class="headerlink" title="消息追踪服务的实现"></a>消息追踪服务的实现</h3><p>在上一节我们发现了两个问题，让我们一个一个来解决</p>
+<p>####traceContextQueue是如何添加的数据</p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvr98d2j31h608278g.jpg" alt="image-20210429214846621"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">append</span><span class="params">(<span class="keyword">final</span> Object ctx)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">boolean</span> result = traceContextQueue.offer((TraceContext) ctx);</span><br><span class="line">  <span class="keyword">if</span> (!result) &#123;</span><br><span class="line">    log.info(<span class="string">"buffer full"</span> + discardCount.incrementAndGet() + <span class="string">" ,context is "</span> + ctx);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>AsyncTraceDispatcher有一个append方法会一直向队列中加入context，那这个append是谁调的呢</p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvxn6ucj313w09swhi.jpg" alt="image-20210429215324246"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consumeMessageBefore</span><span class="params">(ConsumeMessageContext context)</span> </span>&#123;</span><br><span class="line">  ...<span class="comment">//省略代码</span></span><br><span class="line">    <span class="keyword">if</span> (beans.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      traceContext.setTraceBeans(beans);</span><br><span class="line">      traceContext.setTimeStamp(System.currentTimeMillis());</span><br><span class="line">      localDispatcher.append(traceContext);<span class="comment">//这里调的</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consumeMessageAfter</span><span class="params">(ConsumeMessageContext context)</span> </span>&#123;</span><br><span class="line">...<span class="comment">//省略代码</span></span><br><span class="line">  localDispatcher.append(subAfterContext);<span class="comment">//这里调的</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>清晰了，原来是消费前消费后都会把context加入到队列中</p>
+<p>第二个问题AsyncAppenderRequest是怎么运行的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncAppenderRequest</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  List&lt;TraceContext&gt; contextList;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">AsyncAppenderRequest</span><span class="params">(<span class="keyword">final</span> List&lt;TraceContext&gt; contextList)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (contextList != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">this</span>.contextList = contextList;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">this</span>.contextList = <span class="keyword">new</span> ArrayList&lt;TraceContext&gt;(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    sendTraceData(contextList);<span class="comment">// 终于看到了发消息的地方</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上代码所示，这个AsyncAppenderRequest就是来发送消息追踪的消息的。</p>
+<p>小结：当消费者发送消息的时候会把要发送消息的context加入到队列中，然后让守护进程去发消息追踪的消息，发消息的代码在下面</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendTraceData</span><span class="params">(List&lt;TraceContext&gt; contextList)</span> </span>&#123;</span><br><span class="line">  Map&lt;String, List&lt;TraceTransferBean&gt;&gt; transBeanMap = <span class="keyword">new</span> HashMap&lt;String, List&lt;TraceTransferBean&gt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (TraceContext context : contextList) &#123;</span><br><span class="line">    <span class="keyword">if</span> (context.getTraceBeans().isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Topic value corresponding to original message entity content</span></span><br><span class="line">    String topic = context.getTraceBeans().get(<span class="number">0</span>).getTopic();</span><br><span class="line">    String regionId = context.getRegionId();</span><br><span class="line">    <span class="comment">// Use  original message entity's topic as key</span></span><br><span class="line">    String key = topic;</span><br><span class="line">    <span class="keyword">if</span> (!StringUtils.isBlank(regionId)) &#123;</span><br><span class="line">      key = key + TraceConstants.CONTENT_SPLITOR + regionId;</span><br><span class="line">    &#125;</span><br><span class="line">    List&lt;TraceTransferBean&gt; transBeanList = transBeanMap.get(key);</span><br><span class="line">    <span class="keyword">if</span> (transBeanList == <span class="keyword">null</span>) &#123;</span><br><span class="line">      transBeanList = <span class="keyword">new</span> ArrayList&lt;TraceTransferBean&gt;();</span><br><span class="line">      transBeanMap.put(key, transBeanList);</span><br><span class="line">    &#125;</span><br><span class="line">    TraceTransferBean traceData = TraceDataEncoder.encoderFromContextBean(context);</span><br><span class="line">    transBeanList.add(traceData);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (Map.Entry&lt;String, List&lt;TraceTransferBean&gt;&gt; entry : transBeanMap.entrySet()) &#123;</span><br><span class="line">    String[] key = entry.getKey().split(String.valueOf(TraceConstants.CONTENT_SPLITOR));</span><br><span class="line">    String dataTopic = entry.getKey();</span><br><span class="line">    String regionId = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (key.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">      dataTopic = key[<span class="number">0</span>];</span><br><span class="line">      regionId = key[<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    flushData(entry.getValue(), dataTopic, regionId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的代码就不详细讲解了可以看一下发送消息的Message是什么样的</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Message&#123;topic='rmq_sys_TRACE_DATA_cn-qingdao-publictest', flag=0, properties=&#123;KEYS=7F00000100077CD62F4389D8FA370048, WAIT=true&#125;, body=[83, 117, 98, 66, 101, 102, 111, 114, 101, 1, 49, 54, 49, 57, 53, 49, 57, 48, 57, 57, 48, 57, 54, 1, 99, 110, 45, 113, 105, 110, 103, 100, 97, 111, 45, 112, 117, 98, 108, 105, 99, 116, 101, 115, 116, 1, 71, 73, 68, 95, 115, 116, 105, 99, 107, 101, 114, 1, 55, 70, 48, 48, 48, 48, 48, 49, 50, 52, 55, 65, 51, 66, 49, 57, 50, 68, 51, 50, 56, 57, 68, 56, 70, 67, 68, 56, 48, 48, 50, 48, 1, 55, 70, 48, 48, 48, 48, 48, 49, 48, 48, 48, 55, 55, 67, 68, 54, 50, 70, 52, 51, 56, 57, 68, 56, 70, 65, 51, 55, 48, 48, 52, 56, 1, 48, 1, 110, 117, 108, 108, 1, 49, 57, 50, 46, 49, 54, 56, 46, 51, 49, 46, 53, 52, 64, 57, 51, 51, 56, 2], transactionId='null'&#125;</span><br><span class="line">body解码后是这样：</span><br><span class="line">SubBefore1619519099096cn-qingdao-publictest消费者组7F000001247A3B192D3289D8FCD800207F00000100077CD62F4389D8FA3700480nullip@9338</span><br></pre></td></tr></table></figure>
+<p>总结：本文从消息追踪功能的初始化，启动，和实现仨个方面进行了讲解了一下消息追踪是怎么跑起来的，为了方便对整体有个认知，这里有些细节没有去讲，去了解和认识RocketMQ还是很有好处的。</p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2021/05/17/谈谈Redis分布式锁/" data-toggle="tooltip" data-placement="top" title="谈谈Redis分布式锁">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2021/03/14/Java泛型详解（对比Kotlin）/" data-toggle="tooltip" data-placement="top" title="Java泛型详解（对比Kotlin）">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

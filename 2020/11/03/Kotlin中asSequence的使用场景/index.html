@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="在Java中使用Lambda的时候我们经常会用到stream()来进行流式处理，其实Java中的stream和我们即将要了解到的asSequence是十分相似的，都是惰式处理，即存在中间操作和末端操作，当有末端操作时才会触发中间操作返回一个值，这种方式比普通的List操作在某些条件下会快不少，下面我们一块来看一下吧。" />
+    <meta name="keywords" content="" />
+    <title>Kotlin中asSequence的使用场景</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                Kotlin中asSequence的使用场景<br>
+                
+                <p>作者：wz<br>编写：2020-11-03</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <h3 id="List和Sequence的不同："><a href="#List和Sequence的不同：" class="headerlink" title="List和Sequence的不同："></a>List和Sequence的不同：</h3><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listOf(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>).asSequence().map &#123; it * it &#125;.filter &#123; it &gt; <span class="number">3</span> &#125;.toList()</span><br></pre></td></tr></table></figure>
+<p>惰性操作存在中间操作和末端操作，如上代码toList()之前的那些就是中间操作，在没有操作toList()之前是没有任何输出和结果的，只是对数据进行加工，最终的计算是在终端操作toList中完成的。Sequence的操作是先对一个元素把所有的操作都加工完，最终在终端操作中进行计算。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listOf(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>).map &#123; it * it &#125;.filter &#123; it &gt; <span class="number">3</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>做同样的事情，不用asSequence的话，其中每步操作都会返回一个新的List，然后再对新的List进行操作，每步都是终端操作。</p>
+<p>这样就会导致当list有很多元素的时候不加asSequence的时候没进行一个操作都要重新遍历进行操作，导致耗时比较高。</p>
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><ol>
+<li>第一个很确定的使用场景是：当处理的元素量很大时，需要使用Sequence，原因已经在上面说了</li>
+<li>对于单一处理步骤，大多数情况下，直接使用List效率更高，Sequence其实不是内联的，当处理多个操作的时候使用Sequence是个好的选择。在<a href="https://juejin.im/post/6844903622409453576" target="_blank" rel="noopener">这片文章</a>中作者有个例子时只有Map这一个操作的时候Sequence的时间是优于List的</li>
+<li>当使用first或last操作符时，如果再有其他操作的情况下Sequence是最优选择，如果仅有first或last时，应该也是最有选，通过源码可知Sequence的first时iterator.next()而List的first时this[0]。</li>
+<li>当作为参数传递时应该使用List；因为List是存在内存当中，如果把Sequence的当参数可能会多次遍历。</li>
+</ol>
+<h3 id="和Java中Stream区别"><a href="#和Java中Stream区别" class="headerlink" title="和Java中Stream区别"></a>和Java中Stream区别</h3><ol>
+<li>Kotlin的Sequence更容易使用。</li>
+<li>Java的Stream可以使用并行流进行并行操作，我认为这是最主要的一点。</li>
+</ol>
+<p>参考文章：</p>
+<p><a href="https://juejin.im/post/6844903616072040455" target="_blank" rel="noopener">https://juejin.im/post/6844903616072040455</a></p>
+<p><a href="https://juejin.im/post/6844903736364498957" target="_blank" rel="noopener">https://juejin.im/post/6844903736364498957</a></p>
+<p><a href="https://juejin.im/post/6844903622409453576" target="_blank" rel="noopener">https://juejin.im/post/6844903622409453576</a></p>
+<p><a href="https://juejin.im/post/6844903667947012110" target="_blank" rel="noopener">https://juejin.im/post/6844903667947012110</a></p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2020/11/16/HBase初识-简单介绍下HBase使用/" data-toggle="tooltip" data-placement="top" title="HBase初识-简单介绍下HBase使用">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2020/11/03/Mysql中的数据类型/" data-toggle="tooltip" data-placement="top" title="MySQL中的数据类型">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

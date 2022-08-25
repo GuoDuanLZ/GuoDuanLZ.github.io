@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="Redis作为一款十分优秀的k-v数据库，其底层实现就是字典(dict)，作为Redis数据结构的第一节我们就先来看一下字典。" />
+    <meta name="keywords" content="" />
+    <title>Redis数据结构-字典(dict)</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                Redis数据结构-字典(dict)<br>
+                
+                <p>作者：wz<br>编写：2021-06-23</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <p><meta name="referrer" content="no-referrer"><br>支撑着Redis大量数据的结构就是我们今天要说的字典，先来揭开他神秘的面纱</p>
+<h3 id="字典的结构"><a href="#字典的结构" class="headerlink" title="字典的结构"></a>字典的结构</h3><p>我们来看一下Redis的源码：</p>
+<p>dict:字典的结构</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 字典</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dict</span> &#123;</span><span class="comment">//dictCreate创建和初始化</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 类型特定函数：相当于一些通用方法的接口，当dict用于不同地方这些通用方法有不同的实现；通用方法类似：计算hash值，对比键方法等</span></span><br><span class="line">    dictType *type;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 私有数据：类型特定函数的私有数据  privdata 属性则保存了需要传给那些类型type特定函数的可选参数。</span></span><br><span class="line">    <span class="keyword">void</span> *privdata;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 哈希表：ht 属性是一个包含两个项的数组， 数组中的每个项都是一个 dictht 哈希表， 一般情况下， 字典只使用 ht[0] 哈希表， ht[1] 哈希表只会在对 ht[0] 哈希表进行 rehash 时使用。</span></span><br><span class="line">    dictht ht[<span class="number">2</span>];<span class="comment">//dictht hash桶初始化创建见dictExpand     </span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// rehash 索引</span></span><br><span class="line">    <span class="comment">// 当 rehash 不在进行时，值为 -1  // 记录 rehash 进度的标志，值为-1 表示 rehash 未进行</span></span><br><span class="line">    <span class="keyword">int</span> rehashidx; <span class="comment">/* rehashing not in progress if rehashidx == -1 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 目前正在运行的安全迭代器的数量</span></span><br><span class="line">    <span class="keyword">int</span> iterators; <span class="comment">/* number of iterators currently running */</span></span><br><span class="line"></span><br><span class="line">&#125; dict; <span class="comment">//dict空间创建初始化在dictExpand，第一次是在_dictExpandIfNeededif-&gt;dictExpand(d, DICT_HT_INITIAL_SIZE);</span></span><br></pre></td></tr></table></figure>
+<p>先来看一下dictType，看看有哪些方法可以根据不同场景来进行自定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 字典类型特定函数</span></span><br><span class="line"><span class="comment"> */</span> <span class="comment">//dictType主要由xxxDictType(dbDictType zsetDictType setDictType等)</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictType</span> &#123;</span><span class="comment">//函数privdata参数从dict-&gt;privdata中获取</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 计算哈希值的函数 // 计算键的哈希值函数, 计算key在hash table中的存储位置，不同的dict可以有不同的hash function.</span></span><br><span class="line">    <span class="function"><span class="keyword">unsigned</span> <span class="title">int</span> <span class="params">(*hashFunction)</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *key)</span></span>;<span class="comment">//dictHashKey中执行该函数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 复制键的函数</span></span><br><span class="line">    <span class="keyword">void</span> *(*keyDup)(<span class="keyword">void</span> *privdata, <span class="keyword">const</span> <span class="keyword">void</span> *key);<span class="comment">//dictSetKey</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 复制值的函数</span></span><br><span class="line">    <span class="keyword">void</span> *(*valDup)(<span class="keyword">void</span> *privdata, <span class="keyword">const</span> <span class="keyword">void</span> *obj); <span class="comment">//dictSetVal  保存在dictEntry-&gt;v-&gt;value中，然后在</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 对比键的函数</span></span><br><span class="line">    <span class="keyword">int</span> (*keyCompare)(<span class="keyword">void</span> *privdata, <span class="keyword">const</span> <span class="keyword">void</span> *key1, <span class="keyword">const</span> <span class="keyword">void</span> *key2);<span class="comment">//dictCompareKeys</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 销毁键的函数</span></span><br><span class="line">    <span class="keyword">void</span> (*keyDestructor)(<span class="keyword">void</span> *privdata, <span class="keyword">void</span> *key);<span class="comment">//dictFreeKey</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 销毁值的函数 </span></span><br><span class="line">    <span class="keyword">void</span> (*valDestructor)(<span class="keyword">void</span> *privdata, <span class="keyword">void</span> *obj);<span class="comment">//dictFreeVal</span></span><br><span class="line"></span><br><span class="line">&#125; dictType;</span><br></pre></td></tr></table></figure>
+<p>再来看下比较重要的一个结构dictht（hash表）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictht</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//每个具体table[i]中的节点数据类型是dictEntry 结构表示， 每个 dictEntry 结构都保存着一个键值对：</span></span><br><span class="line">    <span class="comment">// 哈希表节点数组</span></span><br><span class="line">    dictEntry **table;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 哈希表大小</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> size;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 哈希表大小掩码，用于计算索引值:总是等于 size - 1</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> sizemask; <span class="comment">//sizemask = size-1 因为具体的桶是从0到size-1</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 该哈希表已有节点的数量</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> used;</span><br><span class="line"></span><br><span class="line">&#125; dictht;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 哈希表节点</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> &#123;</span> </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 键：这就是k-v中真正存key的地方</span></span><br><span class="line">    <span class="keyword">void</span> *key; <span class="comment">//对应一个robj</span></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 值：v 属性则保存着键值对中的值， 其中键值对的值可以是一个指针， 或者是一个 uint64_t 整数， 又或者是一个 int64_t 整数。</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        <span class="keyword">void</span> *val;</span><br><span class="line">        <span class="keyword">uint64_t</span> u64;</span><br><span class="line">        <span class="keyword">int64_t</span> s64;<span class="comment">//一般记录的是过期键db-&gt;expires中每个键的过期时间  单位ms</span></span><br><span class="line">    &#125; v;<span class="comment">//对应一个robj</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 有冲突时指向下个哈希表节点，形成链表</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> *<span class="title">next</span>;</span></span><br><span class="line"></span><br><span class="line">&#125; dictEntry;</span><br></pre></td></tr></table></figure>
+<p>整体结构如下图：</p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsatit0yijj30tf0epdhj.jpg" alt="1625757422875"></p>
+<p>图来源：《Redis设计与实现》</p>
+<h3 id="字典数据的存储"><a href="#字典数据的存储" class="headerlink" title="字典数据的存储"></a>字典数据的存储</h3><p>首先根据dict的dictType来确定计算hash值的函数，根据这个函数来计算key的hash值</p>
+<p>然后根据hash&amp;ht[0].sizemask来计算处于hash节点数组的哪个位置，如果当前位置有值则插入到<strong>表头位置</strong>，形成一个链表</p>
+<h3 id="字典的扩容与缩容"><a href="#字典的扩容与缩容" class="headerlink" title="字典的扩容与缩容"></a>字典的扩容与缩容</h3><h4 id="扩容和缩容标准："><a href="#扩容和缩容标准：" class="headerlink" title="扩容和缩容标准："></a>扩容和缩容标准：</h4><p><strong>扩容</strong>：</p>
+<ul>
+<li>服务器目前没有在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 1 ；</li>
+<li>服务器目前正在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 5 ；</li>
+</ul>
+<p><strong>缩容：</strong></p>
+<ul>
+<li>当负载因子小于0.1时</li>
+</ul>
+<p>负载因子计算公式：</p>
+<p>load_factor = ht[0].used/ht[0].size</p>
+<p><strong>这里的used的数量等于加入元素的数量，而不是hash表节点数组用了几个</strong></p>
+<h4 id="如何扩缩容："><a href="#如何扩缩容：" class="headerlink" title="如何扩缩容："></a>如何扩缩容：</h4><p>前面我们说过字典（dict）是有两个hash表（dictht）的，当需要扩缩容时，先计算出新的ht[1]的大小，然后把ht[0]的数据都挪到ht[1]里面去，在挪的过程中不是一口气全挪过去，因为数量可能会很大，而是渐进式的去挪，每次有操作才去挪一些。</p>
+<p>看一下上述操作的一些细节：</p>
+<p>细节一：新的ht[1]的大小时如何计算的？</p>
+<p>​    当扩容时，新的大小为第一个大于等于ht[0].used <em> 2的2^n(2的n次方幂)，例：used = 4 那么第一个大于4</em>2的2的n次方幂为8（2^3）</p>
+<p>​    当缩容时，新的大小为第一个大于等于ht[0].used 的2^n(2的n次方幂)，例：used = 4 那么第一个大于4的2的n次方幂为4（2^2）</p>
+<p>细节二：如何渐进式的扩缩容？</p>
+<p>这时rehashidx就起作用了，他记录着当前要处理的index，每次进行添加，删除，或者更新操作的时候，就把ht[0]hash表在redhashidx索引上的所有键值对rehash到ht[1]中，然后rehashidx加一，依次进行，因为redis时单线程，所以不用考虑多线程问题。</p>
+<p>在扩缩容过程中，当需要查找，删除，更新操作时，需要两个hash表去操作，先在ht[0]找，然后再在ht[1]找，找到就操作，想添加操作，会直接添加到ht[1]中。</p>
+<p>Redis的字典(dict)结构大致就这么些内容，这是最基础的数据类型，之所以基础是因为整个数据库都是基于这个数据结构的，其他redis对象也会用字典作为value值的结构，比如hash对象，set对象，zset对象也有用到，这些我们在后面的文章中都会根据具体的命令进行分析。</p>
+<p>参考：《Redis设计与实现》黄健宏 著</p>
+<p><a href="https://github.com/y123456yz/Reading-and-comprehense-redis-cluster" target="_blank" rel="noopener">源码参考 - github.com</a></p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2021/07/11/Redis对象-String/" data-toggle="tooltip" data-placement="top" title="Redis对象-String">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2021/05/17/谈谈Redis分布式锁/" data-toggle="tooltip" data-placement="top" title="谈谈Redis分布式锁">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

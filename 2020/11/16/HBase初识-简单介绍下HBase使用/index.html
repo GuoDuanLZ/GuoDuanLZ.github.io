@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="最近使用到了HBase，然后顺带稍微学习入门了一下，做一下笔记" />
+    <meta name="keywords" content="" />
+    <title>HBase初识-简单介绍下HBase使用</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                HBase初识-简单介绍下HBase使用<br>
+                
+                <p>作者：wz<br>编写：2020-11-16</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <h3 id="HBase概念及对比理解"><a href="#HBase概念及对比理解" class="headerlink" title="HBase概念及对比理解"></a>HBase概念及对比理解</h3><p>对于我们常使用关系型数据库的来说，我们一般理解数据在数据库中的存储是下面这样子的：</p>
+<p>有一张user表，表中数据如下：</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>sex</th>
+<th>city</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>张三</td>
+<td>男</td>
+<td>北京</td>
+</tr>
+<tr>
+<td>2</td>
+<td>李四</td>
+<td>男</td>
+<td>上海</td>
+</tr>
+</tbody>
+</table>
+<p>但是对于HBase来说，他的核心是Map，对于常规的Map，我们见到的如下所示：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	<span class="attr">"id"</span>:<span class="string">"1"</span>,</span><br><span class="line">	<span class="attr">"name"</span>: <span class="string">"张三"</span>,</span><br><span class="line">	<span class="attr">"sex"</span>:<span class="string">"男"</span>,</span><br><span class="line">	<span class="attr">"city"</span>:<span class="string">"北京"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是对于HBase并不是这样的，HBase有几个概念：Table，Row，Column，Colum Family，Colum Qualifier，Cell，Timestamp</p>
+<p><strong>Table</strong>：如关系型数据库一样，就是一张表</p>
+<p><strong>Row</strong>：HBase中的行，由一个行键和多个与之相关联的列组成。其中行键是按照字母进行排序的。</p>
+<p><strong>Colum</strong>：colum包含colum family和colum qualifier，中间用:分割</p>
+<p><strong>Cell</strong>：cell包含value和timestamp</p>
+<p>上面这些是HBase中一个map中需要包含的，所以hbase中的map如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	<span class="attr">"1"</span>:&#123;</span><br><span class="line">		<span class="attr">"baseInfo"</span>:&#123;</span><br><span class="line">			<span class="attr">"name"</span>:&#123;</span><br><span class="line">				2637421:"张三"</span><br><span class="line">			&#125;</span><br><span class="line">			"sex":&#123;</span><br><span class="line">				2637421:"男”</span><br><span class="line">				2637425:"女”</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		"otherInfo":&#123;</span><br><span class="line">			"city":&#123;</span><br><span class="line">				2637421："北京"</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="string">"2:&#123;</span></span><br><span class="line">		"baseInfo":&#123;</span><br><span class="line">			"name":&#123;</span><br><span class="line">				2637421:"李四"</span><br><span class="line">			&#125;</span><br><span class="line">			"sex":&#123;</span><br><span class="line">				2637421:"男”</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		"otherInfo":&#123;</span><br><span class="line">			"city":&#123;</span><br><span class="line">				2637421："上海"</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面这个Map就展示了HBase中map的结构，其中1和2是表中的<strong>row key</strong>，baseInfo和otherInfo是<strong>colum family</strong> 建表时就需要声明好，name，sex和city是<strong>colum qulifier</strong>，李四，男和上海是<strong>value</strong>，2637421是<strong>timestamp</strong>每更新一条数据，老数据会在新数据下面，只是时间戳被更新成最新的</p>
+<p>如果搞成比较容易理解的表示方法，如下：</p>
+<table>
+<thead>
+<tr>
+<th>row key</th>
+<th>cloum family</th>
+<th></th>
+<th>cloum family</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>name</td>
+<td>sex</td>
+<td>city</td>
+</tr>
+<tr>
+<td>1</td>
+<td>张三</td>
+<td>男</td>
+<td>北京</td>
+</tr>
+<tr>
+<td>2</td>
+<td>李四</td>
+<td>男</td>
+<td>上海</td>
+</tr>
+</tbody>
+</table>
+<h3 id="HBase使用："><a href="#HBase使用：" class="headerlink" title="HBase使用："></a>HBase使用：</h3><p>了解了HBase的相关概念，那让我们看一下HBase是如何使用的吧：</p>
+<h4 id="安装："><a href="#安装：" class="headerlink" title="安装："></a>安装：</h4><p><a href="https://hbase.apache.org/book.html#quickstart" target="_blank" rel="noopener">https://hbase.apache.org/book.html#quickstart</a>  安装就对比这个官网这个quickstart进行简单的本地安装就可以了，够我们入门使用了。</p>
+<h4 id="命令行使用："><a href="#命令行使用：" class="headerlink" title="命令行使用："></a>命令行使用：</h4><p><strong>建表</strong>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create 'user','basicInfo','otherInfo'</span><br></pre></td></tr></table></figure>
+<p>其中：user是表名，basicInfo 和 otherInfo是Colum Family，需要注意的是：colum family是在建表时就需要指定的并且是不能修改的。</p>
+<p><strong>插入数据</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">put &apos;user&apos;,&apos;1&apos;,&apos;basicInfo:name&apos;,&apos;张三&apos;</span><br><span class="line">put &apos;user&apos;,&apos;1&apos;,&apos;basicInfo:sex&apos;,&apos;男&apos;</span><br><span class="line">put &apos;user&apos;,&apos;1&apos;,&apos;otherInfo:city&apos;,&apos;北京&apos;</span><br></pre></td></tr></table></figure>
+<p>如上表示插入在rowkey为1的数据</p>
+<p><strong>获取数据</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">get &apos;user&apos;,&apos;1&apos;</span><br><span class="line"></span><br><span class="line">colum                                 cell</span><br><span class="line">basicInfo:name                     timestamp=1421762485768, value=张三</span><br><span class="line">basicInfo:sex                      timestamp=1421762485768, value=男</span><br><span class="line">otherInfo:city                     timestamp=1421762485768, value=北京</span><br></pre></td></tr></table></figure>
+<p>看到获取的这个数据是不是发现和上面介绍的概念和结构是一样的</p>
+<h4 id="SpringBoot中使用"><a href="#SpringBoot中使用" class="headerlink" title="SpringBoot中使用"></a>SpringBoot中使用</h4><p><strong>依赖引入</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.spring4all&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-boot-starter-hbase&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;$&#123;hbase-spring-boot-version&#125;&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>HBase配置</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">## HBase 配置</span><br><span class="line">spring.data.hbase.quorum=xxx</span><br><span class="line">spring.data.hbase.rootDir=xxx</span><br><span class="line">spring.data.hbase.nodeParent=xxx</span><br></pre></td></tr></table></figure>
+<p><strong>使用</strong>：</p>
+<p>我们使用spring为我们提供的HBaseTemplate来进行操作</p>
+<p>​    <strong>插入数据</strong>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这里是伪代码</span></span><br><span class="line"><span class="meta">@Autowired</span> </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">val</span>  hbaseTemplate:HBaseTemplate;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">set</span><span class="params">(key: <span class="type">String</span>,value: <span class="type">User</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> saveOrUpdates = mutableArrayListof&lt;Mutation&gt;()</span><br><span class="line">    <span class="comment">// 首先把key转换一下，设置进来</span></span><br><span class="line">    <span class="keyword">val</span> put = Put(convertKey(key))</span><br><span class="line">    <span class="comment">// 把对象转换成多个colum的形式，每个Colum包含一个columFamily，qualifier，和value</span></span><br><span class="line">    <span class="keyword">val</span> colums = convertUserToColums(value)</span><br><span class="line">    <span class="comment">// 遍历塞进去</span></span><br><span class="line">    <span class="keyword">for</span>(colum <span class="keyword">in</span> colums)&#123;</span><br><span class="line">        put.addColumn(colum.cloumFamily, colum.qualifier, colum.value)</span><br><span class="line">    &#125;</span><br><span class="line">    saveOrUpdates.add(put)</span><br><span class="line">    <span class="comment">// 保存</span></span><br><span class="line">    hbaseTemplate.saveOrUpdates(<span class="string">"user"</span>, saveOrUpdates)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>​    <strong>获取数据</strong>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这里是伪代码</span></span><br><span class="line"><span class="meta">@Autowired</span> </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">val</span>  hbaseTemplate:HBaseTemplate;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">get</span><span class="params">(key: <span class="type">String</span>)</span></span>:User &#123;</span><br><span class="line">    hbaseTemplate.saveOrUpdates(<span class="string">"user"</span>,key, UserRowMapper())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserRowMapper</span> : <span class="type">RowMapper</span>&lt;<span class="type">User</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> const <span class="keyword">val</span> COLUMN_FAMILY = <span class="string">"userInfo"</span>.getBytes();</span><br><span class="line">    <span class="keyword">private</span> const <span class="keyword">val</span> NAME = <span class="string">"name"</span>.getBytes();</span><br><span class="line">    <span class="keyword">private</span> const <span class="keyword">val</span> SEX = <span class="string">"sex"</span>.getBytes();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">mapRow</span><span class="params">(result: <span class="type">Result</span>, rowNum: <span class="type">Int</span>)</span></span>: User &#123;</span><br><span class="line">        <span class="keyword">val</span> name = result.getValue(COLUMN_FAMILY,NAME).toSting</span><br><span class="line">        <span class="keyword">val</span> sex = result.getValue(COLUMN_FAMILY,SEX).toSting</span><br><span class="line">        <span class="keyword">return</span> User(name,<span class="keyword">set</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面代码只是伪代码，未经过认证，详细使用还要实际使用过程中完善修改。</p>
+<p>理解了以上的内容，HBase也算是大致入了个门，以后再有深入的学习，我会再记录下来，有问题的地方希望大家能给留言指出~</p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2020/11/24/MySQL中的order-by-limit中的坑/" data-toggle="tooltip" data-placement="top" title="MySQL中的order by limit中的坑">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2020/11/03/Kotlin中asSequence的使用场景/" data-toggle="tooltip" data-placement="top" title="Kotlin中asSequence的使用场景">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

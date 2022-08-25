@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>果断的荔枝</title>
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        <div id="title">
+            <h1>
+                果断的荔枝<br>
+                
+                <p>
+                    技术分享<br>
+                </p>
+                
+            </h1>
+        </div>
+
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/12/02/LeetCode1275-找出井字棋的获胜者-Kotlin/">
+                LeetCode1275-找出井字棋的获胜者 Kotlin<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+
+A 和 B 在一个 3 x 3 的网格上玩井字棋。
+井字棋游戏的规则如下：
+玩家轮流将棋子放在空方格 (“ “) 上。第一个玩家 A 总是用 “X” 作为棋子，而第二个玩家 B 总是用 “O” 作为棋子。“X” 和 “O” 只能放在空方格中，而不能放在已经被占用的方格上。只要有 3 个相同...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#LeetCode">LeetCode</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Kotlin">Kotlin</a> 
+                
+                    <a id="categorieTage" href="/tages/#LeetCode">LeetCode</a> 
+                
+                    <a id="categorieTage" href="/tages/#算法">算法</a> 
+                
+                    <a id="categorieTage" href="/tages/#数据结构">数据结构</a> 
+                
+                    <a id="categorieTage" href="/tages/#数组">数组</a> 
+                
+                    <a id="categorieTage" href="/tages/#位运算">位运算</a> 
+                
+                    <a id="categorieTage" href="/tages/#165周赛">165周赛</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+
+        <div id="index-footer">
+            
+            
+        </div>    
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

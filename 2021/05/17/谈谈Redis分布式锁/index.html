@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="Redis锁是一个老生常谈的问题了，正好公司需要一个简单易用并且可靠的分布式锁，就顺带了解了下成熟的方案，并且根据需求封装了一个适合我们的分布式锁。在这个过程发现redis去实现分布式锁好像不一定非要使用setnx，并且setnx也有些问题解决不了，还了解到了RedLock。最终根据我们的需求进行了取舍。" />
+    <meta name="keywords" content="" />
+    <title>谈谈Redis分布式锁</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                谈谈Redis分布式锁<br>
+                
+                <p>作者：wz<br>编写：2021-05-17</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <p><meta name="referrer" content="no-referrer"></p>
+<h2 id="怎么加锁"><a href="#怎么加锁" class="headerlink" title="怎么加锁"></a>怎么加锁</h2><p>当我们要给一段代码加锁，要经历如下三步：</p>
+<ol>
+<li>首先要保证要加锁的部分没有被其他人所占领</li>
+<li>在没有被其他人占领的同时要占领下来</li>
+<li>通常我们要给锁设置一个过期时间，防止未能正确释放锁从而导致一直占领锁</li>
+</ol>
+<p>上面三步一定要保证的一点是一定要是一个原子操作，任何一步出错都有可能导致出问题。Redis给我们提供了一个命令setnx，能够一口气实现上面三个步骤。另外如果使用lua脚本不使用setnx也是可以保证上面三步的一个原子性的。</p>
+<h2 id="Redis分布式锁需要解决的问题及解决方案"><a href="#Redis分布式锁需要解决的问题及解决方案" class="headerlink" title="Redis分布式锁需要解决的问题及解决方案"></a>Redis分布式锁需要解决的问题及解决方案</h2><ul>
+<li><p>处理时间过长导致锁失效</p>
+<p>上面也提到了当我们加锁时是需要给锁设置一个过期时间的，但是我们的业务处理的时间有可能会超过这个时间，尤其是如果有调用其他服务时，例如：在加锁的过程中，A服务去调用B服务，此时B服务压力比较大，响应时间比较长，比我们设置的锁过期时间还要长，这样就会导致当前锁失效，其他请求拿到锁。这里就有小伙伴说了，我设置一个时间很长的锁不久可以了嘛，这样是可以解决大部分问题，但是一旦不能正常解锁，就会这个锁被占用时间很长，这样加过期时间的意义就小了不少。</p>
+<p>解决办法：给加锁操作添加一个续约机制，当到处理时间超过当前加锁时间的2/3时，就给当前的锁续约一个时间，只有当去释放这个锁，才算结束。</p>
+</li>
+<li><p>一个请求的锁被另外的请求给处理了</p>
+<p>在不能保证第一个问题时：当A请求的锁过期，此时B请求获取了一把同样key的锁，此时A请求处理完任务要去释放锁，直接把B请求的锁给释放掉了，就出现了问题。</p>
+<p>在能保证第一个问题时：这个续约机制续约的时候需要保证只给自己请求的那个锁进行续约，不然如果A请求的锁的续约线程没有被正确终止，其实任务已经完成，这个key不需要被续约了，但是请求A还是会一直去续约这个key，不管续约的这个锁是不是当前请求的。</p>
+<p>解决办法：基于上面两种情况，我们需要做的是在key一样的前提下区分不同的请求的锁，即给相同key不同请求的value设置不一样的值，比如uuid时间戳都可以。</p>
+</li>
+<li><p>Redis Master节点宕机导致锁丢失</p>
+<p>在主从复制过程中，当一个锁加到了master节点上，在此时还没有同步到slave节点的时候master宕机了，此时这个锁就没了。</p>
+<p>解决办法：单机情况下没办法。当为Redis Cluster情况下，可以看一下官方给出的<a href="http://redis.cn/topics/distlock.html" target="_blank" rel="noopener">RedLock方案</a>，大概就是给多个master加锁成功才算加锁成功。</p>
+</li>
+<li><p>不可重入</p>
+<p>当一个请求已经加锁了，然后又要去请求一个需要相同锁的方法，此时就出现了问题，怎么也获取不到自己持有的锁。。这就是锁不可重入。</p>
+<p>解决办法：需要让锁支持可重入这个特性，那么应该怎么去做呢，大体思想是需要记录当前线程加锁的次数，然后没解锁一次减去一次，直到这个计数归零才算正确解锁。具体做法我了解的有两个，一个是使用threadlocal去记录当前线程的锁的次数。另外一种是加锁使用hash类型，把线程id当作hash的key，value为计数，这个在最后我们会分析。</p>
+</li>
+</ul>
+<h2 id="我们的方案及实现"><a href="#我们的方案及实现" class="headerlink" title="我们的方案及实现"></a>我们的方案及实现</h2><p>通过上面的分析，以及我们自己业务的需求，我们解决了上面的四个问题中的前两个，这两个已经能满足我们的业务的需要，算是在复杂和稳定中找了个我们需求的平衡。</p>
+<p>我们使用的Lettuce Java客户端，主要是因为他支持响应式调用，下面来看一下Kotlin下的实现：</p>
+<p>加锁操作,为了解决上述问题2中的问题，这里的value值我们用的是uuid:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">suspend <span class="function"><span class="keyword">fun</span> <span class="title">lock</span><span class="params">(leaseTime: <span class="type">Long</span>, timeUnit: <span class="type">TimeUnit</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">  value = UUID.randomUUID().toString()</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    redis.reactive().<span class="keyword">set</span>(key, value, SetArgs().nx().ex(timeUnit.toSeconds(leaseTime)))</span><br><span class="line">    .awaitFirstOrNull() != <span class="literal">null</span></span><br><span class="line">  ).also &#123;</span><br><span class="line">    <span class="keyword">if</span> (it) &#123;</span><br><span class="line">      renewExpiration(leaseTime, timeUnit)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了解决业务处理时间长锁失效问题进行了续约:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">renewExpiration</span><span class="params">(leaseTime: <span class="type">Long</span>, timeUnit: <span class="type">TimeUnit</span>)</span></span> &#123;</span><br><span class="line">  job = GlobalScope.launch(Dispatchers.IO) &#123;</span><br><span class="line">    delay(timeUnit.toMillis(leaseTime * <span class="number">2</span> / <span class="number">3</span>))</span><br><span class="line">    <span class="keyword">while</span> (!released) &#123;</span><br><span class="line">      redis.sync().eval&lt;<span class="built_in">Long</span>&gt;(</span><br><span class="line">        <span class="string">"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1],ARGV[2]) else return 0 end"</span>,</span><br><span class="line">        ScriptOutputType.INTEGER,</span><br><span class="line">        arrayOf(key),</span><br><span class="line">        value,</span><br><span class="line">        leaseTime.toString()</span><br><span class="line">      ).takeIf &#123; it == <span class="number">1</span>L &#125; ?: kotlin.run &#123;</span><br><span class="line">        released = <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">      delay(timeUnit.toMillis(leaseTime * <span class="number">2</span> / <span class="number">3</span>))</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的GlobalScope.launch在Java中可以用守护线程去实现，效果一样，这里使用GlobalScope.launch充分利用了协程的优势，也可以用netty中的timer去实现，redission就是用这种方式实现的，如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> timer = HashedWheelTimer()</span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">renewExpiration</span><span class="params">(key: <span class="type">String</span>, leaseTime: <span class="type">Long</span>, timeUnit: <span class="type">TimeUnit</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> lockInfo = renewExpirationMap[key] ?: <span class="keyword">return</span></span><br><span class="line">        lockInfo.timeout = timer.newTimeout(</span><br><span class="line">            &#123;</span><br><span class="line">                redis.sync().eval&lt;<span class="built_in">Long</span>&gt;(</span><br><span class="line">                    <span class="string">"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1],ARGV[2]) else return 0 end"</span>,</span><br><span class="line">                    ScriptOutputType.INTEGER,</span><br><span class="line">                    arrayOf(key),</span><br><span class="line">                    lockInfo.value,</span><br><span class="line">                    leaseTime.toString()</span><br><span class="line">                ).takeIf &#123; it == <span class="number">1</span>L &#125;?.let &#123;</span><br><span class="line">                    renewExpiration(key, leaseTime, timeUnit)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            leaseTime * <span class="number">2</span> / <span class="number">3</span>, timeUnit</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>解锁的时候会判断value值，通过lua脚本</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">suspend <span class="function"><span class="keyword">fun</span> <span class="title">unlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">  redis.reactive().eval&lt;<span class="built_in">Long</span>&gt;(</span><br><span class="line">    <span class="string">"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"</span>,</span><br><span class="line">    ScriptOutputType.INTEGER,</span><br><span class="line">    arrayOf(key),</span><br><span class="line">    value</span><br><span class="line">  ).awaitFirstOrNull().takeIf &#123; it == <span class="number">1</span>L &#125;?.let &#123;</span><br><span class="line">    cancelRenewExpiration()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>源码在这里可以看到<a href="https://github.com/GuoDuanLZ/sisyphus/blob/lock/middleware/sisyphus-redis/src/main/kotlin/com/bybutter/sisyphus/middleware/redis/DistributedLock.kt" target="_blank" rel="noopener">sisyphus/DistributedLock.kt</a></p>
+<h2 id="再来看下可重入性"><a href="#再来看下可重入性" class="headerlink" title="再来看下可重入性"></a>再来看下可重入性</h2><p>我们的分布式锁没有实现可重入性，梳理了下场景好像没哪里用的着，就没有去实现，不过倒是研究了下redission是如何实现可重入性的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;T&gt; <span class="function">RFuture&lt;T&gt; <span class="title">tryLockInnerAsync</span><span class="params">(<span class="keyword">long</span> waitTime, <span class="keyword">long</span> leaseTime, TimeUnit unit, <span class="keyword">long</span> threadId, RedisStrictCommand&lt;T&gt; command)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> evalWriteAsync(getRawName(), LongCodec.INSTANCE, command,</span><br><span class="line">                        <span class="string">"if (redis.call('exists', KEYS[1]) == 0) then "</span> +</span><br><span class="line">                        <span class="string">"redis.call('hincrby', KEYS[1], ARGV[2], 1); "</span> +</span><br><span class="line">                        <span class="string">"redis.call('pexpire', KEYS[1], ARGV[1]); "</span> +</span><br><span class="line">                        <span class="string">"return nil; "</span> +</span><br><span class="line">                        <span class="string">"end; "</span> +</span><br><span class="line">                        <span class="string">"if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then "</span> +</span><br><span class="line">                        <span class="string">"redis.call('hincrby', KEYS[1], ARGV[2], 1); "</span> +</span><br><span class="line">                        <span class="string">"redis.call('pexpire', KEYS[1], ARGV[1]); "</span> +</span><br><span class="line">                        <span class="string">"return nil; "</span> +</span><br><span class="line">                        <span class="string">"end; "</span> +</span><br><span class="line">                        <span class="string">"return redis.call('pttl', KEYS[1]);"</span>,</span><br><span class="line">                        Collections.singletonList(getRawName()), unit.toMillis(leaseTime), getLockName(threadId));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先来看下这个lua脚本的几个变量都代表了什么，KEYS[1]：getRawName()代表锁的key，ARGV[1]：unit.toMillis(leaseTime)代表了过期时间，ARGV[2]：getLockName(threadId)代表了当前锁的value值，来看下这个value是什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">getLockName</span><span class="params">(<span class="keyword">long</span> threadId)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> id + <span class="string">":"</span> + threadId;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">RedissonBaseLock</span><span class="params">(CommandAsyncExecutor commandExecutor, String name)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">super</span>(commandExecutor, name);</span><br><span class="line">  <span class="keyword">this</span>.commandExecutor = commandExecutor;</span><br><span class="line">  <span class="keyword">this</span>.id = commandExecutor.getConnectionManager().getId();<span class="comment">//id值的获取为当前连接的id</span></span><br><span class="line">  <span class="keyword">this</span>.internalLockLeaseTime = commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout();</span><br><span class="line">  <span class="keyword">this</span>.entryName = id + <span class="string">":"</span> + name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这下我们就可以知道了，锁的Value为当前值的连接id加上当前的线程id就是当前锁的value值。然后我们再来看下脚本的意思：</p>
+<p>当不存在key的时候，这时候是可以进行加锁的，执行了hincrby key value 1 并且设置了过期时间。当这次请求需要重入的时候，即在key存在时，又要去加锁，先判断value是否是一致的（也就是说来确定是重入，而不是其他线程的非法加锁请求，若是其他线程按理说应该加锁失败）一致则进行计数hincrby key value 1 这样就可以记录当前重入的次数了。</p>
+<p>当解锁的时候每次解锁就把重入次数减1，当减到0的时候则直接删除这个key。删除的脚本如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">evalWriteAsync(getRawName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,</span><br><span class="line">               <span class="string">"if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then "</span> +</span><br><span class="line">               <span class="string">"return nil;"</span> +</span><br><span class="line">               <span class="string">"end; "</span> +</span><br><span class="line">               <span class="string">"local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); "</span> +</span><br><span class="line">               <span class="string">"if (counter &gt; 0) then "</span> +</span><br><span class="line">               <span class="string">"redis.call('pexpire', KEYS[1], ARGV[2]); "</span> +</span><br><span class="line">               <span class="string">"return 0; "</span> +</span><br><span class="line">               <span class="string">"else "</span> +</span><br><span class="line">               <span class="string">"redis.call('del', KEYS[1]); "</span> +</span><br><span class="line">               <span class="string">"redis.call('publish', KEYS[2], ARGV[1]); "</span> +</span><br><span class="line">               <span class="string">"return 1; "</span> +</span><br><span class="line">               <span class="string">"end; "</span> +</span><br><span class="line">               <span class="string">"return nil;"</span>,</span><br><span class="line">               Arrays.asList(getRawName(), getChannelName()), LockPubSub.UNLOCK_MESSAGE, internalLockLeaseTime, getLockName(threadId));</span><br></pre></td></tr></table></figure>
+<p>以上就是redission中锁的重入性的实现。redission中的锁做的比较完整，如果对redis锁有比较高的要求的话可以直接使用redission。</p>
+<p>上面就是这次redis分布式锁的分享，如果我上面有写的哪里不准确或者有错误，希望能够给我指出。</p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2021/06/23/Redis数据结构-字典(dict)/" data-toggle="tooltip" data-placement="top" title="Redis数据结构-字典(dict)">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/" data-toggle="tooltip" data-placement="top" title="【源码分析】RocketMQ消息追踪源码详解">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

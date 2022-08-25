@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="protobuf是一种序列化数据结构的协议，看到这里你可能会想到Json和XML等等，每个序列化数据结构协议都会有他的优点，比如Json它结构清晰，可读性比较好，protobuf的优点也很明显，就是更小，更快等，这篇文章会参考官方文档，详细解析一下protobuf的编码。" />
+    <meta name="keywords" content="" />
+    <title>Protocol Buffer编码</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                Protocol Buffer编码<br>
+                
+                <p>作者：wz<br>编写：2021-03-01</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <meta name="referrer" content="no-referrer">
+
+<h3 id="ProtoBuf数据类型"><a href="#ProtoBuf数据类型" class="headerlink" title="ProtoBuf数据类型"></a>ProtoBuf数据类型</h3><h4 id="一个简单的Message"><a href="#一个简单的Message" class="headerlink" title="一个简单的Message"></a>一个简单的Message</h4><p>让我们看一下下面这个简单的Message的定义：</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Test1</span> </span>&#123;</span><br><span class="line">  <span class="keyword">optional</span> <span class="built_in">int32</span> a = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在一个应用中，你创建了一个名为Test1的Message，并且设置a为150。然后你将这个Message序列化后得到输出流如下三个字节：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">08 96 01</span><br></pre></td></tr></table></figure>
+<p>如此小的数字表示，但这些都意味着什么 呢</p>
+<p>在protobuf中message是一系列的键值对，上面三个字节中的08（000 1000）表示了message中的数据类型和关键字编号，其中，数据类型是此字节编码的后三位，即0（000），然后根据下面的表格确定类型；关键字（上述例子中的a）的编号是此字节右移三位，即1（000 0001）。此时就容易有一个疑问了，那a是怎么表示的？这就是protobuf的另一个优点了——安全，如果消息被截取是没办法知道消息代表了什么意思，只有拥有.proto文件才能对应上关键字。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Meaning</th>
+<th style="text-align:left">Used For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0</td>
+<td style="text-align:left">Varint</td>
+<td style="text-align:left">int32, int64, uint32, uint64, sint32, sint64, bool, enum</td>
+</tr>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">64-bit</td>
+<td style="text-align:left">fixed64, sfixed64, double</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">Length-delimited</td>
+<td style="text-align:left">string, bytes, embedded messages, packed repeated fields</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">Start group</td>
+<td style="text-align:left">groups (deprecated)</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">End group</td>
+<td style="text-align:left">groups (deprecated)</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">32-bit</td>
+<td style="text-align:left">fixed32, sfixed32, float</td>
+</tr>
+</tbody>
+</table>
+<p>上面例子中的96 01就是代表着我们给a设置的值——150，下面介绍了protobuf中message的数据类型是如何编码的。</p>
+<h3 id="Varints"><a href="#Varints" class="headerlink" title="Varints"></a>Varints</h3><p>Varint从名字就能看出点什么var(可变的) int，有点MySQL中varchar那种感觉，这种类型是使用一个或多个字节去序列化integer的方法，越小的数字会占用越小的字节。</p>
+<p>变长的类型需要解决的一个问题是确定编码的边界，varints为了解决这个问题，为每个字节都设置了一个标志位，如果下一个字节还是我的就是1，如果下一个字节不是我的了就是0。每个字节的低七位用来以二进制补码来存储一组数据，采用小端字节序（这里有篇文章介绍了字节序 [<a href="https://www.ruanyifeng.com/blog/2016/11/byte-order.html]），本排前面的字节在后面。举个例子300的编码" target="_blank" rel="noopener">https://www.ruanyifeng.com/blog/2016/11/byte-order.html]），本排前面的字节在后面。举个例子300的编码</a></p>
+<p>300的补码为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">100101100</span><br></pre></td></tr></table></figure>
+<p>根据低七位为用来存储数据，则可分解为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">000 0010  010 1100</span><br></pre></td></tr></table></figure>
+<p>再根据是小端字节序，转化后为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">010 1100 000 0010</span><br></pre></td></tr></table></figure>
+<p>再根据每个字节都需要设置一个标志位，下一个字节还是我的就是1，不是我的就是0，则转化后为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1010 1100 0000 0010</span><br></pre></td></tr></table></figure>
+<p>这就是300的varints的字节编码，一共占用了两个字节。如我们所了解，例如Java中的int是固定长度，占用4个字节的，而varints表示的数字越小占用的空间也就越小，但是当足够大的时候，varints是比固定长度需要的空间多的。但是我们用的数的范围一般较小。</p>
+<h3 id="Signed-Integers"><a href="#Signed-Integers" class="headerlink" title="Signed Integers"></a>Signed Integers</h3><p>在计算机中，整数类型都是用补码来存储的，varints也一样，补码的计算是原码所有位取反，然后再加1，例如int32 的-64的原码为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">10000000 00000000 00000000 01000000</span><br></pre></td></tr></table></figure>
+<p>-64的补码为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">11111111 11111111 11111111 11000000</span><br></pre></td></tr></table></figure>
+<p>占用4个字节，如果转换为varints的话，则需要占用5个字节，不论负数的数值多大，都会稳定的占用5个字节（实际上protobuf中，会稳定占用10个字节，因为是按照long来编码，是为了int32改为in64的时候仍可以兼容</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1go5ulywiwjj21840a0q6x.jpg" alt="image-20210302204711254" style="zoom: 50%;"></p>
+<p>为了解决这个不够高效的问题，最后引入了Zigzag编码，这个编码的主要做的是将有符号数，通过一个公式转成无符号数，然后再根据varints编码进行处理。这个公式如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sint32:(n&lt;&lt;1)^(n&gt;&gt;31) sint64 (n&lt;&lt;1)^(n&gt;&gt;63)</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Signed Original</th>
+<th style="text-align:left">Encoded As</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">-1</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">-2</td>
+<td style="text-align:left">3</td>
+</tr>
+<tr>
+<td style="text-align:left">2147483647</td>
+<td style="text-align:left">4294967294</td>
+</tr>
+<tr>
+<td style="text-align:left">-2147483648</td>
+<td style="text-align:left">4294967295</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Non-varint-Numbers"><a href="#Non-varint-Numbers" class="headerlink" title="Non-varint Numbers"></a>Non-varint Numbers</h3><p>Non-varint就比较简单了，当算出来数据类型为1的时候，就直接需要一个64位大小的数据块，数据类型为5的时候，需要一个32位大小的数据块。这两种情况也是和上面一样采用小端字节序</p>
+<h3 id="String（字符串）"><a href="#String（字符串）" class="headerlink" title="String（字符串）"></a>String（字符串）</h3><p>先看一个带有string的Message，并且设置b的值为”testing”</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Test2</span> </span>&#123;</span><br><span class="line">  <span class="keyword">optional</span> <span class="built_in">string</span> b = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编码后为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">12 07 74 65 73 74 69 6e 67</span><br></pre></td></tr></table></figure>
+<p>字符串的编码和之前不同的是，第一个字节依旧代表类型和关键字编号，第二个字节表示后面有多少位是这个字段的，即编码方式为：key + length + content</p>
+<p>12 ( 0001 0010)，后三位 010 为 数据类型为 2，0001 0010 右移三位为 0000 0010，即关键字编号为2。length为7则后面跟着7个字节是这个字段的，即我们设置的值</p>
+<h3 id="Embedded-Messages（嵌入式Message）"><a href="#Embedded-Messages（嵌入式Message）" class="headerlink" title="Embedded Messages（嵌入式Message）"></a>Embedded Messages（嵌入式Message）</h3><p>同样的先来看个带有嵌入式的Message，设置值为上面的Test1</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Test3</span> </span>&#123;</span><br><span class="line">  <span class="keyword">optional</span> Test1 c = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编码后为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1a 03 08 96 01</span><br></pre></td></tr></table></figure>
+<p>先来看一下数据类型1a(0001 1010)后三位010为2，跟String一样，03代表长度，那08 96 01就很眼熟了，就是开头说的Test1。</p>
+<h3 id="Packed-Repeated-Fields（打包重复元素）"><a href="#Packed-Repeated-Fields（打包重复元素）" class="headerlink" title="Packed Repeated Fields（打包重复元素）"></a>Packed Repeated Fields（打包重复元素）</h3><p>在protobuf2.1.0引入了一个[packed=true]的东西，如下面的例子</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Test4</span> </span>&#123;</span><br><span class="line">  <span class="keyword">repeated</span> <span class="built_in">int32</span> d = <span class="number">4</span> [packed=<span class="literal">true</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在不使用[packed=true]的时候，repeated的字段会被编译成关键字编号一样的多个键值对，并且不是连续的，也没有什么顺序；在解析时，元素之间的顺序会被保留下来，但是其他字段的顺序会丢失。在protobuf2.1.0中引入了[packed=true]，protobuf3.0中已经默认使用这个东西，当用上这个东西的时候，这个重复字段会被单独打包到一个键值对中，并且数据类型为2。就如上面那个Test4例子，当给重复字段赋值为3，270和86942后，编码后为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">22 // tag 0010 0010(关键字编码 010 0 = 4, 数据类型 010 = 2)</span><br><span class="line"></span><br><span class="line">06 // payload size (设置的length = 6 bytes)</span><br><span class="line"> </span><br><span class="line">03 // first element (varint 3)</span><br><span class="line"> </span><br><span class="line">8E 02 // second element (varint 270)</span><br><span class="line"> </span><br><span class="line">9E A7 05 // third element (varint 86942)</span><br></pre></td></tr></table></figure>
+<h3 id="Field-Order-字段顺序"><a href="#Field-Order-字段顺序" class="headerlink" title="Field Order(字段顺序)"></a>Field Order(字段顺序)</h3><p>在.proto文件中字段编码可以随便写，对Message的序列化顺序是没有任何影响的。当Message被序列化的时候，对于字段是没有保证的顺序。序列化的顺序是一个实现细节，将来任何特定的实现细节都可以被更改，因此protobuf解析器必须能够以任何顺序解析字段。</p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2021/03/14/Java泛型详解（对比Kotlin）/" data-toggle="tooltip" data-placement="top" title="Java泛型详解（对比Kotlin）">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2020/12/22/Kotlin使用Jackson序列化中的一些问题/" data-toggle="tooltip" data-placement="top" title="Kotlin使用Jackson序列化中的一些问题">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

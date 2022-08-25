@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，任何一个确定的时刻，一个处理器（内核）都会只执行一条线程中的指令，为了线程切换后能恢复到正确的执行位置，每条线程都需要一个独立的程序计数器，各线程之间计数器互不影响，独立存储，这类内存区域为线程私有内存区域" />
+    <meta name="keywords" content="" />
+    <title>JVM内存区域</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                JVM内存区域<br>
+                
+                <p>作者：wz<br>编写：2019-11-14</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <meta name="referrer" content="no-referrer">
+
+<a id="more"></a>
+<ul>
+<li><h4 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h4></li>
+</ul>
+<ol>
+<li><p>简介：</p>
+<p>java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，任何一个确定的时刻，一个处理器（内核）都会只执行一条线程中的指令，为了线程切换后能恢复到正确的执行位置，每条线程都需要一个独立的程序计数器，各线程之间计数器互不影响，独立存储，这类内存区域为线程私有内存区域</p>
+</li>
+<li><p>异常：</p>
+<p>此内存区域是唯一一个在Java虚拟机规范中没有规定任何OutOfMemoryError情况的区域</p>
+</li>
+</ol>
+<ul>
+<li><h4 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h4><ul>
+<li><p>Java虚拟机栈：</p>
+<ol>
+<li><p>简介：</p>
+<p>Java虚拟机栈也是 <strong>线程私有</strong> 的，是用来描述Java方法执行的内存模型：每个方法执行的同时都会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等信息，每个方法从调用到执行完成，对应着一个栈帧从入栈到出栈的过程。</p>
+<p>通常把JVM内存区域分为堆和栈的这个栈值得是虚拟机栈中的局部变量表部分：存放了各种基本数据类型，对象的引用。其中，64位长度的long和double类型会占两个局部变量空间，其余数据类型占一个。局部变量表所需要的内存空间在编译期间完成分配的，当进入一个方法时，这个方法需要在帧中分配多大的局部变量空间是完全确定的，并且方法运行期间不会改变变量表的大小</p>
+</li>
+<li><p>异常：</p>
+<p>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError错误，原因基本是因为深度递归、死循环或定义大量的本地变量导致，栈大小通过-Xss（每个线程的栈大小，也可以说是虚拟机的最小栈分配单位）来进行设置，一般设置大小为1M足够</p>
+<p>虚拟机栈可动态扩展时，当无法申请到足够的内存时，会抛出OutOfMemoryError异常，JVM栈空间被线程分割的一块一块的，如果有线程没有栈空间可以分配了会抛出OutOfMemoryError异常，很多线程等待，一直不释放，通过-Xss给每个线程分配的空间加起来大于Jvm的内存空间</p>
+</li>
+</ol>
+</li>
+<li><p>本地方法栈：</p>
+<ol>
+<li><p>简介：</p>
+<p>与Java虚拟机栈的区别：虚拟机栈为虚拟机执行Java方法，本地方法栈为虚拟机执行使用到的native方法服务</p>
+</li>
+<li><p>异常：</p>
+<p>异常同上</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><h4 id="Java堆"><a href="#Java堆" class="headerlink" title="Java堆"></a>Java堆</h4><ol>
+<li><p>简介：</p>
+<p>被所有线程所共享的一块内存区域，用来存放对象实例，是垃圾收集器主要管理的区域，有新生代和老年代</p>
+</li>
+<li><p>异常：</p>
+<p>当需要在堆中完成实例的分配，但是堆中无法再扩展时，将会抛出OutOfMemoryError：java heap space的异常，通过-Xmx和-Xms来分配大小。</p>
+<p>当遇到异常时，首先对dump出来的对转储进行分析，重点是确认内存中的对象是否是有必要的，也就是先分清楚到底是内存泄露，还是内存溢出：</p>
+<ul>
+<li>内存泄露的话查看泄露对象到GC Roots的引用链，看是哪个对象做了什么操作导致垃圾收集器没有进行回收</li>
+<li>如果是内存溢出的话，也就是这些对象都很正常，都应该活着，则看下虚拟机的堆参数-Xmx和-Xms是否可以调大</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><h4 id="方法区（jdk1-8之后MetaSpace是方法区的实现（使用本地内存），以前永久代是方法区的实现）"><a href="#方法区（jdk1-8之后MetaSpace是方法区的实现（使用本地内存），以前永久代是方法区的实现）" class="headerlink" title="方法区（jdk1.8之后MetaSpace是方法区的实现（使用本地内存），以前永久代是方法区的实现）"></a>方法区（jdk1.8之后MetaSpace是方法区的实现（使用本地内存），以前永久代是方法区的实现）</h4><ol>
+<li><p>简介</p>
+<p>各个线程共享的区域，存放加载的类信息，常量，静态变量，及时编译后的代码 </p>
+<p><strong>运行时常量池</strong> ：是方法区的一部分，用于存仓编译器生成的各种字面量和字符的引用，联想到String那一节（jdk1.8之后放到了堆中）</p>
+</li>
+<li><p>异常：</p>
+<p>当方法区无法满足内存分配时，会抛出OutOfMemoryError：PermGen space的错误     </p>
+</li>
+</ol>
+</li>
+<li><p>java内存区域示意图：</p>
+<p><img src="http://ww1.sinaimg.cn/large/006tNc79ly1g4z57uq8ugj30u00xm3zt.jpg" alt=""></p>
+</li>
+<li><h4 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h4><p>Dog dog = new Dog();</p>
+<p>虚拟机遇到一个new指令时：</p>
+<ol>
+<li><p>首先在常量池中查找Dog，看是否能定位到Dog类的符号引用，如果能定位到说明这个类已经被加载到了方法区了，继续执行，没有的话执行类的加载过程，在类加载那里详细说</p>
+</li>
+<li><p>类加载完后，虚拟机将为新生的对象分配内存，对象所需的大小在类加载完之后就可以确定下来，就是在堆中划出一部分内存给此对象</p>
+</li>
+<li><p>内存分配完后，要对对象进行一些必要的设置，例如这个对象是哪个类的实例，如何才能找到类的元数据信息，对象的哈希码，对象的GC分代年龄信息，这些信息存放在对象头上</p>
+</li>
+<li><p>从虚拟机的视角来看，此时一个新的对象已经产生了，但是对于java程序的视角，对象才刚刚开始，然后去执行对象的构造方法，构造方法执行完对象才算彻底创建完成了</p>
+</li>
+<li><p>到此，new运算符可以返回堆中这个对象的引用了，然后，根据dog这个对象是局部变量还是成员变量(实例变量),还是静态变量来确定将引用放在哪里：</p>
+<p>局部变量：变量在帧栈的局部变量表，这个对象的引用就放在帧栈</p>
+<p>成员变量：变量在堆中，对象的引用也放在堆中</p>
+<p>静态变量：变量在方法区，对象的引用也放在方法区</p>
+<p><img src="http://ww2.sinaimg.cn/large/006tNc79ly1g5vvy0etltj30pf0f7dip.jpg" alt="image-20190811175159878"></p>
+<p><img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5vw4w4ye3j30py0jen6g.jpg" alt="image-20190811175836270"></p>
+<p><img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5vw587u7gj313s0ittfa.jpg" alt="image-20190811175856192"></p>
+</li>
+</ol>
+</li>
+<li><h4 id="对象的内存布局"><a href="#对象的内存布局" class="headerlink" title="对象的内存布局"></a>对象的内存布局</h4><p>对象的内存布局分为三部分：对象头（Header），实例数据(Instance)，对齐填充(Padding)</p>
+<p>对象头分为两部分信息：</p>
+<ul>
+<li><p>第一部分：用于存储对象自身的运行时数据，如哈希码，GC分代年龄，锁状态标志，线程持有的锁，偏向线程ID，偏向时间戳等。</p>
+</li>
+<li><p>第二部分：存储的是类型指针，通过这个指针来确定对象是哪个类的实例，这个访问方式主流的有两种，根据虚拟机的不同而不同，主流的有使用句柄和直接指针两种，示例图如下：</p>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code>![](http://ww4.sinaimg.cn/large/006tNc79ly1g4zhitew35j30ms0ba7g7.jpg)
+
+![](http://ww4.sinaimg.cn/large/006tNc79ly1g4zhjjcby9j30n60bmwqj.jpg)
+</code></pre><ul>
+<li><h4 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h4><ol>
+<li><p>java性能调优参数-Xms -Xmx -Xss的含义</p>
+<p>-xss：规定了每个线程虚拟机栈的大小，将会影响并发线程数的大小</p>
+<p>-xms：堆的初始值，对象刚创建出来的时候的大小</p>
+<p>-xmx：堆能达到的最大值</p>
+</li>
+<li><p>java内存模型中堆和栈的区别-内存分配策略</p>
+<ul>
+<li>静态存储：编译时确定每个数据目标在运行时的存储空间需求：要求程序代码中不允许有可变结构的存在，也不允许有嵌套或者递归</li>
+<li>栈式存储：数据区需求在编译时未知，运行时模块入口前确定</li>
+<li>堆式存储：编译时或运行时模块入口都无法确定，需要动态分配，可变长度串，和实例</li>
+</ul>
+<p>联系：</p>
+<ul>
+<li>引用对象、数组时，栈定义变量保存堆中目标的首地址</li>
+</ul>
+<p>区别：</p>
+<ul>
+<li>管理方式：栈自动释放，堆需要GC</li>
+<li>空间大小：栈比堆小</li>
+<li>碎片相关：栈产生的碎片小于堆</li>
+<li>分配方式：栈支持静态和动态分配，而堆仅支持动态分配</li>
+<li>栈的效率比堆高</li>
+</ul>
+</li>
+<li><p>MetaSpace相比PermGen的优势</p>
+<ul>
+<li>字符串常量池存在永久代中，容易出现性能问题和内存溢出</li>
+<li>类和方法的信息大小难以确定，给永久代的大小指定带来困难</li>
+<li>永久代会为GC带来不必要的复杂性</li>
+</ul>
+<p>intern方法：</p>
+<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwxrkg0fj31070lgdvw.jpg" alt="image-20190811182613179"></p>
+<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwzax7s1j31f90h9wly.jpg" alt="image-20190811182750415"></p>
+<p><img src="https://ww2.sinaimg.cn/large/006tNc79ly1g5vwyau6kqj30zn0iqgw9.jpg" alt="image-20190811182652997"></p>
+<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vx0tlzv2j31fq0k8k16.jpg" alt="image-20190811182917740"></p>
+</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li>参考：<a href="https://www.jianshu.com/p/ebaa1a03c594" target="_blank" rel="noopener">https://www.jianshu.com/p/ebaa1a03c594</a></li>
+</ul>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2019/11/14/虚拟机类加载/" data-toggle="tooltip" data-placement="top" title="虚拟机类加载">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2019/05/28/【坑】mybatis-plus-批量插入saveBatch的坑/" data-toggle="tooltip" data-placement="top" title="【坑】mybatis plus 批量插入saveBatch的坑">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

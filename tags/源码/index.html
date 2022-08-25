@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>果断的荔枝</title>
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        <div id="title">
+            <h1>
+                果断的荔枝<br>
+                
+                <p>
+                    技术分享<br>
+                </p>
+                
+            </h1>
+        </div>
+
+        
+        <article id="article">
+            <a id="articleTitle" href="/2021/07/11/Redis对象-String/">
+                Redis对象-String<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                Redis对象结构123456789101112131415161718192021222324typedef struct redisObject &#123;    // 类型    unsigned type:4;    // 编码    unsigned encoding:4;  /*...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Redis">Redis</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#redis">redis</a> 
+                
+                    <a id="categorieTage" href="/tages/#redis对象">redis对象</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2021/06/23/Redis数据结构-字典(dict)/">
+                Redis数据结构-字典(dict)<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                支撑着Redis大量数据的结构就是我们今天要说的字典，先来揭开他神秘的面纱
+字典的结构我们来看一下Redis的源码：
+dict:字典的结构
+12345678910111213141516171819202122/* * 字典 */typedef struct dict &#123;//dict...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#redis">redis</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#redis">redis</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#字典">字典</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/">
+                【源码分析】RocketMQ消息追踪源码详解<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+
+消息追踪有生产者发送消息追踪和消费者消费消息追踪，因为他们原理差不多，并且容易出现问题的地方主要集中在消费者消息追踪，所以这篇文章主要去讲一下消费者的消息追踪，而消费者又分为PullConsumer和PushConsumer，在消息追踪这块基本是一样的，所以最终选择的是PushConsum...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#RocketMQ">RocketMQ</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#RocketMQ">RocketMQ</a> 
+                
+                    <a id="categorieTage" href="/tages/#中间件">中间件</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/11/19/【源码解析】Java8-StringBuild和StringBuffer/">
+                【源码解析】Java8-StringBuild和StringBuffer<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+StringBuild 和 StringBuffer
+源码及分析：
+
+类定义：
+
+12345678910111213141516public final class StringBuilder extends AbstractStringBuilder implements java.io....
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Java源码解析">Java源码解析</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Java">Java</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java8">Java8</a> 
+                
+                    <a id="categorieTage" href="/tages/#StringBuild">StringBuild</a> 
+                
+                    <a id="categorieTage" href="/tages/#StringBuffer">StringBuffer</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/11/19/【源码解析】Java8-String/">
+                【源码解析】Java8-String<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+
+String是Immutable（不可变的）
+String源码及分析：
+类定义：
+1public final class String &#123;&#125;
+变量定义：
+1234567/** The value is used for character storage. */priv...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Java源码解析">Java源码解析</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Java">Java</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java8">Java8</a> 
+                
+                    <a id="categorieTage" href="/tages/#String">String</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/11/19/【源码解析】Java8-LinkList/">
+                【源码解析】Java8-LinkList<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+
+LinkedList源码分析
+从创建开始说：
+1List linkList = new LinkedList();
+12/** * Constructs an empty list. */public LinkedList() &#123;&#125;
+构建函数里面啥都没操作，然后看一下L...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Java源码解析">Java源码解析</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Java">Java</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java集合">Java集合</a> 
+                
+                    <a id="categorieTage" href="/tages/#LinkList">LinkList</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java8">Java8</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/11/19/【源码解析】Java8-ArrayList/">
+                【源码解析】Java8-ArrayList<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+ArrayList源码分析
+从一个简单的list创建说起：
+List list = new ArrayList();
+点进来看一下ArrayList
+123456/**     * Constructs an empty list with an initial capacity of te...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Java源码解析">Java源码解析</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Java">Java</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java集合">Java集合</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java8">Java8</a> 
+                
+                    <a id="categorieTage" href="/tages/#ArrayList">ArrayList</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+        <article id="article">
+            <a id="articleTitle" href="/2019/11/19/【源码解析】Java8-HashMap/">
+                【源码解析】Java8-HashMap<br>
+            </a>
+            
+            <br>
+            <span id="indexArticleText">
+                
+
+
+函数构造12345678910111213141516171819Map hashMap = new HashMap();//常量/*** The default initial capacity - MUST be a power of two.*/static final int D...
+            </span>
+            <p>
+                 
+                    <a id="categorieTage" href="/categories/#Java源码解析">Java源码解析</a> 
+                
+                
+                
+                    <a id="categorieTage" href="/tages/#Java">Java</a> 
+                
+                    <a id="categorieTage" href="/tages/#源码">源码</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java集合">Java集合</a> 
+                
+                    <a id="categorieTage" href="/tages/#Java8">Java8</a> 
+                
+                    <a id="categorieTage" href="/tages/#HashMap">HashMap</a> 
+                
+            </p>
+        </article>
+        <hr>
+        
+
+        <div id="index-footer">
+            
+            
+        </div>    
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

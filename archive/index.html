@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>归档</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+        <div id="title">
+            <h1>
+                <span style="font-size: 1em;">
+                    归档<br>
+                </span>
+                
+            </h1>
+        </div>
+        <div id="article">
+            
+            
+            <!-- 归档列表 -->
+            
+            
+            <div class="archives-list">
+                <span class="archives-year">2021</span>
+                <ul>
+                    
+                    <li id="archives-item">
+                        07-11
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/07/11/Redis对象-String/" style="color: #0085a1">
+                        <span>
+                            Redis对象-String
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        06-23
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/06/23/Redis数据结构-字典(dict)/" style="color: #0085a1">
+                        <span>
+                            Redis数据结构-字典(dict)
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        05-17
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/05/17/谈谈Redis分布式锁/" style="color: #0085a1">
+                        <span>
+                            谈谈Redis分布式锁
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        04-29
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/" style="color: #0085a1">
+                        <span>
+                            【源码分析】RocketMQ消息追踪源码详解
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        03-14
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/03/14/Java泛型详解（对比Kotlin）/" style="color: #0085a1">
+                        <span>
+                            Java泛型详解（对比Kotlin）
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        03-01
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2021/03/01/Protocol-Buffer编码/" style="color: #0085a1">
+                        <span>
+                            Protocol Buffer编码
+                        </span>
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+            <div class="archives-list">
+                <span class="archives-year">2020</span>
+                <ul>
+                    
+                    <li id="archives-item">
+                        12-22
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/12/22/Kotlin使用Jackson序列化中的一些问题/" style="color: #0085a1">
+                        <span>
+                            Kotlin使用Jackson序列化中的一些问题
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        12-12
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/12/12/RocketMQ消息追踪相关源码分析/" style="color: #0085a1">
+                        <span>
+                            RocketMQ消息追踪相关源码分析
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-24
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/11/24/MySQL中的order-by-limit中的坑/" style="color: #0085a1">
+                        <span>
+                            MySQL中的order by limit中的坑
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-16
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/11/16/HBase初识-简单介绍下HBase使用/" style="color: #0085a1">
+                        <span>
+                            HBase初识-简单介绍下HBase使用
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-03
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/11/03/Kotlin中asSequence的使用场景/" style="color: #0085a1">
+                        <span>
+                            Kotlin中asSequence的使用场景
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-03
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/11/03/Mysql中的数据类型/" style="color: #0085a1">
+                        <span>
+                            MySQL中的数据类型
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        10-28
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/10/28/PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案/" style="color: #0085a1">
+                        <span>
+                            PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        09-18
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/09/18/从Java入门Kotlin-Kotlin类/" style="color: #0085a1">
+                        <span>
+                            从Java入门Kotlin-Kotlin类
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        08-01
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/08/01/Spring-Bean的注入/" style="color: #0085a1">
+                        <span>
+                            Spring Bean的注入
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        05-23
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/05/23/MySQL中的锁-从for-update说起/" style="color: #0085a1">
+                        <span>
+                            MySQL中的锁-从for update说起
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        03-07
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2020/03/07/Kotlin-枚举/" style="color: #0085a1">
+                        <span>
+                            Kotlin-枚举
+                        </span>
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+            <div class="archives-list">
+                <span class="archives-year">2019</span>
+                <ul>
+                    
+                    <li id="archives-item">
+                        12-02
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/12/02/LeetCode1275-找出井字棋的获胜者-Kotlin/" style="color: #0085a1">
+                        <span>
+                            LeetCode1275-找出井字棋的获胜者 Kotlin
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-28
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/28/LeetCode167-两数之和-II-输入有序数组-Kotlin实现/" style="color: #0085a1">
+                        <span>
+                            LeetCode167-两数之和 II - 输入有序数组 Kotlin实现
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-20
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/20/Docker容器管理/" style="color: #0085a1">
+                        <span>
+                            Docker容器管理
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/随笔191119/" style="color: #0085a1">
+                        <span>
+                            随笔191119
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/【源码解析】Java8-StringBuild和StringBuffer/" style="color: #0085a1">
+                        <span>
+                            【源码解析】Java8-StringBuild和StringBuffer
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/【源码解析】Java8-String/" style="color: #0085a1">
+                        <span>
+                            【源码解析】Java8-String
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/【源码解析】Java8-LinkList/" style="color: #0085a1">
+                        <span>
+                            【源码解析】Java8-LinkList
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/【源码解析】Java8-ArrayList/" style="color: #0085a1">
+                        <span>
+                            【源码解析】Java8-ArrayList
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-19
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/19/【源码解析】Java8-HashMap/" style="color: #0085a1">
+                        <span>
+                            【源码解析】Java8-HashMap
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-15
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/15/Java内存模型/" style="color: #0085a1">
+                        <span>
+                            Java内存模型
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-14
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/14/垃圾收集器和内存分配/" style="color: #0085a1">
+                        <span>
+                            垃圾收集器和内存分配
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-14
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/14/虚拟机类加载/" style="color: #0085a1">
+                        <span>
+                            虚拟机类加载
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        11-14
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/11/14/JVM内存区域/" style="color: #0085a1">
+                        <span>
+                            JVM内存区域
+                        </span>
+                        </a>
+                    </li>
+                    
+                    <li id="archives-item">
+                        05-28
+                        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                        <a href="/2019/05/28/【坑】mybatis-plus-批量插入saveBatch的坑/" style="color: #0085a1">
+                        <span>
+                            【坑】mybatis plus 批量插入saveBatch的坑
+                        </span>
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

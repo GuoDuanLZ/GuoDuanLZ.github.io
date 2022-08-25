@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="本篇文章以zookeeper分布式环境的搭建为示例，详细介绍下Docker的容器管理，期间可能会牵扯到zookeeper的知识，不需要的可以直接略过" />
+    <meta name="keywords" content="" />
+    <title>Docker容器管理</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                Docker容器管理<br>
+                
+                <p>作者：wz<br>编写：2019-11-20</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <meta name="referrer" content="no-referrer">
+
+
+
+<ul>
+<li><p>单一容器管理</p>
+<p>当我们需要单个zookeeper的时候直接拉取一个镜像就可以</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull zookeeper</span><br></pre></td></tr></table></figure>
+<p>拉取镜像之后需要将容器运行起来</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker run --name single_zookeeper -d zookeeper:latest</span><br><span class="line"></span><br><span class="line">--name的意思是给这次启动的zookeeper起个名字</span><br><span class="line">-d 的意思是在后台运行</span><br></pre></td></tr></table></figure>
+<p>此时就会在后台运行一个名字为single_zookeeper的容器，默认使用2181端口</p>
+<p>我们可以使用下面的命令来查看日志</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker logs -f single_zookeeper</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>容器标识符</p>
+<p>每个容器启动都会给容器分配一个CONTAINER_ID，默认是128位的，相当于主键，但是一般16位就可以保证唯一性</p>
+<p>有个问题就是CONTAINER_ID虽然能够保证唯一性，但是比较难以记忆，所以就如上面示例一样可以使用 - -name给容器起一个别名</p>
+<p>有了容器名字就可以通过名字来查询容器的一些信息，对容器进行一些操作，如下面</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker ps -a | grep single_zookeeper   //查看容器的运行状态</span><br><span class="line">docker stop single_zookeeper    //停止容器</span><br><span class="line">docker start single_zookeeper  //启动容器</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>容器内部命令：</p>
+<p>容器启动好后还不够，我们有时需要进入容器内部去执行一些命令，docker给我们提供了这样的命令，使用</p>
+<figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker exec 容器名 容器内执行的命令</span><br><span class="line">EX：</span><br><span class="line">docker exec single_zookeeper ls</span><br></pre></td></tr></table></figure>
+<p>如果需要执行多条命令可以加上 - it参数，这样就相当于进入了容器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it single_zookeeper /bin/bash</span><br></pre></td></tr></table></figure>
+<p>这里要注意要带着后面的/bin/bash不然无法进入内部</p>
+</li>
+</ul>
+</li>
+<li><p>多容器管理</p>
+<p>docker 的理念是“一个容器一个进程”，一个服务如果需要多个容器，可以把多个容器起来后使用 —link选项来建立起来联系，这里我们使用一个比较通用和简单的方式 docker compose来启动一个zookeeper集群</p>
+<ol>
+<li><p>首先我们新建一个文件名叫<strong>docker-compose.yml</strong>，其中内容为下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">version: &apos;2&apos;</span><br><span class="line">services:</span><br><span class="line">    zoo1:</span><br><span class="line">        image: zookeeper</span><br><span class="line">        restart: always</span><br><span class="line">        container_name: zoo1</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;2181:2181&quot;</span><br><span class="line">        environment:</span><br><span class="line">            ZOO_MY_ID: 1</span><br><span class="line">            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888</span><br><span class="line"></span><br><span class="line">    zoo2:</span><br><span class="line">        image: zookeeper</span><br><span class="line">        restart: always</span><br><span class="line">        container_name: zoo2</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;2182:2181&quot;</span><br><span class="line">        environment:</span><br><span class="line">            ZOO_MY_ID: 2</span><br><span class="line">            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888</span><br><span class="line">            </span><br><span class="line">    zoo3:</span><br><span class="line">        image: zookeeper</span><br><span class="line">        restart: always</span><br><span class="line">        container_name: zoo3</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;2183:2181&quot;</span><br><span class="line">        environment:</span><br><span class="line">            ZOO_MY_ID: 3</span><br><span class="line">            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888</span><br></pre></td></tr></table></figure>
+<p>下面我们取其中一个配置来进行分析一下配置文件及其含义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">version: &apos;2&apos;</span><br><span class="line">services:</span><br><span class="line">    zoo1:</span><br><span class="line">        image: zookeeper //指定启动容器的镜像</span><br><span class="line">        restart: always  //当启动docker的时候，容器跟着一块启动</span><br><span class="line">        container_name: zoo1 //容器名字</span><br><span class="line">        ports:   //暴露端口信息，将本地的2181（前）端口映射到容器的2181（后）端口</span><br><span class="line">            - &quot;2181:2181&quot;</span><br><span class="line">        environment: //t添加环境变量</span><br><span class="line">            ZOO_MY_ID: 1</span><br><span class="line">            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>容器启动及管理</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">COMPOSE_PROJECT_NAME=multi_zookeeper docker-compose up //此时启动的是文件名为docker-compose.yml的配置文件，如果需要制定配置文件可以使用 -f 来制定配置文件</span><br><span class="line"></span><br><span class="line">docker-compose ps //查看当前启动的容器</span><br><span class="line"></span><br><span class="line">docker rm 容器名  //删除已停止的容器，删除前确保没有重要数据</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+</ul>
+<p>综上，我们就把简单的容器管理学完了，其中顺带把zookeeper的环境配置给配置了一下，这就是docker的一个很明显的优势，本来我们只有一台机器的情况下是没办法来进行多台机器的模拟的，除非启动几台虚拟机，可是这样的代价比较高，并且虚拟机比较耗内存，而docker就给我们提供了这么简单的方式来构建一个zookeeper集群环境</p>
+<p>有什么想法欢迎大家在下面评论，最好带上邮箱，回复评论会有邮件提醒</p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2019/11/28/LeetCode167-两数之和-II-输入有序数组-Kotlin实现/" data-toggle="tooltip" data-placement="top" title="LeetCode167-两数之和 II - 输入有序数组 Kotlin实现">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2019/11/19/随笔191119/" data-toggle="tooltip" data-placement="top" title="随笔191119">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<!--ＪQuery-->
+<script src="/Module/JQuery/jquery.min.js"></script>
+
+<!--Vue.js-->
+<script src="/Module/vue/vue.js"></script>
+<!--饿了么Ｕi-->
+<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
+<script src="/Module/ElementUi/index.js"></script>
+
+<!--highlight-->
+<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
+<script src="/Module/highlight/highlight.min.js"></script>
+
+<!--axios-->
+<script src="/Module/axios/axios.min.js"></script>
+
+<!--评论-->
+<script src="/Module/comment/valine/Valine.min.js"></script>
+
+<!--主题样式-->
+<link rel="stylesheet" href="/Module/style.css">
+
+<!--设置页面描述与关键字,封面图片-->
+
+    <meta name="description" content="最近在工作中第二次遇到order by limit中数据重复问题，第一次遇到草草解决没做记录，导致第二次遇到完全没想起来，再一再二不再三，在这片文章中我会重现一下问题，然后结合官方文档和其他资料分析下原因。" />
+    <meta name="keywords" content="" />
+    <title>MySQL中的order by limit中的坑</title>
+    
+    <style>
+        #content #title {
+            background-image: url('/background.jpg');
+        }
+    </style>
+    
+
+</head>
+<body>
+    <div id="app" v-cloak>
+    <div id="content">
+        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
+<el-dialog :visible.sync="visible"  title="前往">
+    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
+    <div id="searchResult"></div>
+
+    <br>
+    <div id="Menu">
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
+      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+    </div>
+
+</el-dialog>
+
+<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
+
+
+
+        
+        <div id="title">
+            <h1>
+                MySQL中的order by limit中的坑<br>
+                
+                <p>作者：wz<br>编写：2020-11-24</p>
+            </h1>
+        </div>
+        
+
+        <div id="article">
+            <p><meta name="referrer" content="no-referrer"></p>
+<h3 id="情景复现"><a href="#情景复现" class="headerlink" title="情景复现"></a>情景复现</h3><p>首先我们有一张表，如下所示</p>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl15vxmqz4j30x40o2qb9.jpg" alt="image-20201125092848563"></p>
+<p>其中是按照amout进行升序排序的，此时我们想要查询按照amout升序排序前十条数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> <span class="string">`order`</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> amout <span class="keyword">LIMIT</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl15zwg8q1j30kk0con0t.jpg" alt="image-20201125093238340" style="zoom:50%;"></p>
+<p>然后我们继续查询下一页的5条数据，sql如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> <span class="string">`order`</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> amout <span class="keyword">LIMIT</span> <span class="number">5</span> <span class="keyword">OFFSET</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+<p>结果如下：</p>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl16gjp5j9j30k007aq4k.jpg" alt="image-20201125094838747" style="zoom:67%;"></p>
+<p>然后把两张图片放到一起比较一下</p>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl16iak3arj311u0c4afi.jpg" alt="image-20201125095018710"></p>
+<p>注意看红框中的数据，会发现id为221的这个数据重复出现了，这其实不符合我们所想的。</p>
+<h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><p>那原因是什么呢？在<a href="https://dev.mysql.com/doc/refman/5.6/en/limit-optimization.html" target="_blank" rel="noopener">这片官方文档中有解释</a>：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">If you combine LIMIT row<span class="emphasis">_count with ORDER BY, MySQL stops sorting as soon as it has found the first row_</span>count rows of the sorted result, rather than sorting the entire result. If ordering is done by using an index, this is very fast. If a filesort must be done, all rows that match the query without the LIMIT clause are selected, and most or all of them are sorted, before the first row_count are found. After the initial rows have been found, MySQL does not sort any remainder of the result set.</span><br><span class="line"></span><br><span class="line">One manifestation of this behavior is that an ORDER BY query with and without LIMIT may return rows in different order, as described later in this section.</span><br></pre></td></tr></table></figure>
+<p>当混合使用limit和order by的时候，mysql会在查询到limit需要的行数后立刻返回，而不是进行整个的排序，然后把结果返回。</p>
+<p>是不是不好理解，应该会有两个疑问：</p>
+<ul>
+<li><p>第一个：没进行整个排序为什么会得出一个有序的结果；</p>
+</li>
+<li><p>第二个：为什么获取想要行数立即返回就会得到重复数据。</p>
+</li>
+</ul>
+<p>当我们知道order by amout是怎么排序的我们就可以解决上面的问题了。</p>
+<p>查看一下执行计划：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> <span class="string">`order`</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> amout <span class="keyword">LIMIT</span> <span class="number">5</span> <span class="keyword">OFFSET</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl17m9s7urj31ai02umy8.jpg" alt="image-20201125102845092"></p>
+<p>可以看到是没有走索引的，并且是使用filesort进行排序的，虽然这里写着filesort排序其实并不意味着是文件排序，有可能是内存排序，那我们就了解一下是如何排序的吧。</p>
+<h4 id="MySQL的排序"><a href="#MySQL的排序" class="headerlink" title="MySQL的排序"></a>MySQL的排序</h4><p>MySQL内部排序主要有三种方式：常规排序，优化排序和优化队列排序，主要涉及三种排序算法：快速排序，归并排序和堆排序</p>
+<p><strong>常规排序</strong>：</p>
+<ul>
+<li>从表中获取满足where条件的记录</li>
+<li>对于每条记录，将主键和排序键取出放入sort buffer中</li>
+<li>对于sort buffer可以存放满足条件的，进行快速排序，保证sort buffer中的元素是有序的</li>
+<li>当sort buffer被存满之后，需要把元素持久化到文件中，每次持久化文件的时候使用归并排序，使得文件中的元素是有序的，一直循环的执行完</li>
+<li>然后捞取需要的结果返回给客户端</li>
+</ul>
+<p>备注：对于这个sort buffer的大小<a href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_sort_buffer_size" target="_blank" rel="noopener"><code>sort_buffer_size</code></a> 不同的版本是定义不同的，官方是这么说的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">To obtain memory for filesort operations, as of MySQL 8.0.12, the optimizer allocates memory buffers incrementally as needed, up to the size indicated by the sort_buffer_size system variable, rather than allocating a fixed amount of sort_buffer_size bytes up front, as was done prior to MySQL 8.0.12. This enables users to set sort_buffer_size to larger values to speed up larger sorts, without concern for excessive memory use for small sorts. (This benefit may not occur for multiple concurrent sorts on Windows, which has a weak multithreaded malloc.)</span><br></pre></td></tr></table></figure>
+<p>大致意思是：对于8.0的来说，优化器根据需要的增量分配内存缓冲区，而不是像8.0之前那样分配一个固定的大小。</p>
+<p><strong>优化排序</strong>：</p>
+<p>在常规排序中，我们sort buffer中装的是主键和排序键，这样的话需要先查出排序顺序，然后再查出需要字段给客户端，进行了两次IO，而优化排序是放入的需要查出的字段，这样的话就不需要第二次查询了，减少了 一次IO，但是这样会导致sort buffer中存的东西就少了。MySQL提供了参数max_length_for_sort_data，当排序元素小于这个值才会进行优化排序，否则进行常规排序。</p>
+<p><strong>优先队列排序</strong>：</p>
+<p>在5.6版本之后针对order by limit M N进行了优化，虽然也需要所有元素排序（和整个进行排序不一样），但是只需要M+N的大小即可，上面我们说了：会在查询到limit需要的行数后立刻返回，这里用到的是堆排序。对于我们查询需要升序，直接采用大顶堆，只取上面的最小的N个元素就可以；对于降序，采用小顶堆，同理。我们之道堆排序是一种<em>不稳定的排序</em>，所以上述查出结果不一致的情况也可以很容易的理解了。</p>
+<p>参考资料：</p>
+<p><a href="https://dev.mysql.com/doc/refman/5.7/en/limit-optimization.html" target="_blank" rel="noopener">MySQL :: MySQL 5.7 Reference Manual :: 8.2.1.17 LIMIT Query Optimization</a></p>
+<p><a href="https://dev.mysql.com/doc/refman/8.0/en/order-by-optimization.html#order-by-filesort" target="_blank" rel="noopener">MySQL :: MySQL 8.0 Reference Manual :: 8.2.1.16 ORDER BY Optimization</a></p>
+<p><a href="https://www.cnblogs.com/cchust/p/5304594.html" target="_blank" rel="noopener">MySQL排序原理与案例分析 - 天士梦 - 博客园 (cnblogs.com)</a></p>
+   
+            <br>
+            <hr><br>
+            
+                <div id="article-previous">
+                    <a href="/2020/12/12/RocketMQ消息追踪相关源码分析/" data-toggle="tooltip" data-placement="top" title="RocketMQ消息追踪相关源码分析">&larr; 上一篇</a>
+                </div>
+                
+                
+                <div id="article-next">
+                    <a href="/2020/11/16/HBase初识-简单介绍下HBase使用/" data-toggle="tooltip" data-placement="top" title="HBase初识-简单介绍下HBase使用">下一篇 &rarr;</a>
+                </div>
+            
+            <br><br>
+            <hr>
+        </div>
+    </div>
+
+    <div id="comment">
+        
+        
+    <h2>留言</h2>
+    <div id="vcomments">
+    </div>
+    <script>
+        var valine = new Valine({
+        el: '#vcomments', 
+        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
+        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
+    
+        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
+        emojiMaps: {
+          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
+          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
+          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
+          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
+          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
+          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
+          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
+          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
+          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
+          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
+          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
+          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
+          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
+          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
+          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
+          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
+          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
+          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
+          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
+          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
+          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
+        }
+    })
+    </script>
+
+    
+    
+    
+     
+    </div>
+</div>
+    <script src="/Module/main.js"></script>
+</body>
+</html>
