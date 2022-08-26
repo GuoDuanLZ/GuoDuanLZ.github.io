@@ -1,160 +1,390 @@
+
+
 <!DOCTYPE html>
-<html lang="cn">
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Java中的泛型是Java中比较难以理解和使用的部分，及时是知道了泛型，也很难实际运用到工作当中，还有一些让人迷惑的通配符，更是让人摸不到头脑，本文主要讲了泛型在Java中的出现，使用，已经重点介绍了了下通配符相关，还有泛型的原理，最后讲了一下Kotlin中的泛型又做了那些提升。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java泛型详解（对比Kotlin）">
+<meta property="og:url" content="http://yoursite.com/2021/03/14/Java%E6%B3%9B%E5%9E%8B%E8%AF%A6%E8%A7%A3%EF%BC%88%E5%AF%B9%E6%AF%94Kotlin%EF%BC%89/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="Java中的泛型是Java中比较难以理解和使用的部分，及时是知道了泛型，也很难实际运用到工作当中，还有一些让人迷惑的通配符，更是让人摸不到头脑，本文主要讲了泛型在Java中的出现，使用，已经重点介绍了了下通配符相关，还有泛型的原理，最后讲了一下Kotlin中的泛型又做了那些提升。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-14T09:22:39.000Z">
+<meta property="article:modified_time" content="2022-02-12T03:53:46.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="泛型">
+<meta property="article:tag" content="Kotlin">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Java泛型详解（对比Kotlin） - 果断的荔枝</title>
 
-<!--ＪQuery-->
-<script src="/Module/JQuery/jquery.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
-<!--Vue.js-->
-<script src="/Module/vue/vue.js"></script>
-<!--饿了么Ｕi-->
-<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
-<script src="/Module/ElementUi/index.js"></script>
 
-<!--highlight-->
-<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
-<script src="/Module/highlight/highlight.min.js"></script>
 
-<!--axios-->
-<script src="/Module/axios/axios.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
 
-<!--评论-->
-<script src="/Module/comment/valine/Valine.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
 
-<!--主题样式-->
-<link rel="stylesheet" href="/Module/style.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
-<!--设置页面描述与关键字,封面图片-->
 
-    <meta name="description" content="Java中的泛型是Java中比较难以理解和使用的部分，及时是知道了泛型，也很难实际运用到工作当中，还有一些让人迷惑的通配符，更是让人摸不到头脑，本文主要讲了泛型在Java中的出现，使用，已经重点介绍了了下通配符相关，还有泛型的原理，最后讲了一下Kotlin中的泛型又做了那些提升。" />
-    <meta name="keywords" content="" />
-    <title>Java泛型详解（对比Kotlin）</title>
-    
-    <style>
-        #content #title {
-            background-image: url('/background.jpg');
-        }
-    </style>
-    
 
-</head>
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
 <body>
-    <div id="app" v-cloak>
-    <div id="content">
-        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
-<el-dialog :visible.sync="visible"  title="前往">
-    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
-    <div id="searchResult"></div>
+  
 
-    <br>
-    <div id="Menu">
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Java泛型详解（对比Kotlin）"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-03-14 17:22" pubdate>
+          2021年3月14日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          60 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
     </div>
 
-</el-dialog>
-
-<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
-
-
-
-        
-        <div id="title">
-            <h1>
-                Java泛型详解（对比Kotlin）<br>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Java泛型详解（对比Kotlin）</h1>
+            
+            
+              <div class="markdown-body">
                 
-                <p>作者：wz<br>编写：2021-03-14</p>
-            </h1>
-        </div>
-        
+                <meta name="referrer" content="no-referrer" />
+### 为什么需要泛型
 
-        <div id="article">
-            <p><meta name="referrer" content="no-referrer"></p>
-<h3 id="为什么需要泛型"><a href="#为什么需要泛型" class="headerlink" title="为什么需要泛型"></a>为什么需要泛型</h3><p>我们如果需要一个动物园（Zoo）然后里面会生活着很多小动物（animals），如果没有泛型的情况下去实现这样一个类:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Cat</span> <span class="keyword">implements</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Dog</span> <span class="keyword">implements</span> <span class="title">Animal</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Animal[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(Animal e)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Animal <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们如果需要一个动物园（Zoo）然后里面会生活着很多小动物（animals），如果没有泛型的情况下去实现这样一个类:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">Animal</span> &#123;<br>&#125;<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Cat</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Animal</span> &#123;<br>&#125;<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Dog</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Animal</span> &#123;<br>&#125;<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span> &#123;<br>    <span class="hljs-keyword">private</span> Animal[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(Animal e)</span> &#123;<br>        <br>    &#125;<br>    <span class="hljs-keyword">public</span> Animal <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>因为animals有很多种，小狗小猫猴子等，所以我们用Animal的数组，这样可以满足我们的需求，如下代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Zoo zoo = <span class="keyword">new</span> Zoo();</span><br><span class="line">zoo.add(<span class="keyword">new</span> Cat());</span><br><span class="line">zoo.add(<span class="keyword">new</span> Dog());</span><br><span class="line">Animal animal = zoo.get(<span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-type">Zoo</span> <span class="hljs-variable">zoo</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>();<br>zoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Cat</span>());<br>zoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<br><span class="hljs-type">Animal</span> <span class="hljs-variable">animal</span> <span class="hljs-operator">=</span> zoo.get(<span class="hljs-number">0</span>);<br></code></pre></td></tr></table></figure>
+
 <p>然后我需要一个全是小狗的动物园</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Zoo zoo = <span class="keyword">new</span> Zoo();</span><br><span class="line">zoo.add(<span class="keyword">new</span> Dog());</span><br><span class="line">zoo.add(<span class="keyword">new</span> Dog());</span><br><span class="line">zoo.add(<span class="keyword">new</span> Cat());<span class="comment">//（1）不符合要求但是可以加进来，不会报错</span></span><br><span class="line">Dog dog = (Dog) zoo.get(<span class="number">0</span>);</span><br><span class="line">Dog dog = (Dog) zoo.get(<span class="number">2</span>);<span class="comment">//（2）此时得到了错误的类型，强转会出错</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-type">Zoo</span> <span class="hljs-variable">zoo</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>();<br>zoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<br>zoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<br>zoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Cat</span>());<span class="hljs-comment">//（1）不符合要求但是可以加进来，不会报错</span><br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog</span> <span class="hljs-operator">=</span> (Dog) zoo.get(<span class="hljs-number">0</span>);<br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog</span> <span class="hljs-operator">=</span> (Dog) zoo.get(<span class="hljs-number">2</span>);<span class="hljs-comment">//（2）此时得到了错误的类型，强转会出错</span><br></code></pre></td></tr></table></figure>
+
 <p>当我们变换需求为全是小狗的动物园后，发现这里会有两个问题</p>
 <p>1、这里是需要强制转换类型的；2、我们没办法去校验加入的类型是不是我们需要的类型，有可能是错误的，比如代码中的<em>（1）</em>，会导致代码中<em>（2）</em>的错误</p>
 <p>如果要解决上面这个问题我们可以写一个叫做DogZoo，全是小狗的动物园</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DogZoo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Dog[] dogs;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(Dog e)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Dog <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dogs[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DogZoo</span> &#123;<br>    <span class="hljs-keyword">private</span> Dog[] dogs;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(Dog e)</span> &#123;<br>        <br>    &#125;<br>    <span class="hljs-keyword">public</span> Dog <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> dogs[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>但是这样就会写一堆的Zoo，比如CatZoo，MonkeyZoo等等。</p>
 <p>所以就诞生的泛型，有了泛型之后我们就可以写出如下的代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T e)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(T e)</span> &#123;<br>        <br>    &#125;<br>    <span class="hljs-keyword">public</span> T <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这样我就可以拥有我想拥有的动物园了：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 搞一个各种小动物的动物园</span></span><br><span class="line">Zoo&lt;Animal&gt; animalZoo = <span class="keyword">new</span> Zoo&lt;Animal&gt;();</span><br><span class="line">animalZoo.add(<span class="keyword">new</span> Dog());</span><br><span class="line">animalZoo.add(<span class="keyword">new</span> Cat());</span><br><span class="line">Animal animal = animalZoo.get(<span class="number">1</span>);</span><br><span class="line"><span class="comment">// 搞一个只有小狗的动物园</span></span><br><span class="line">Zoo&lt;Dog&gt; dogZoo = <span class="keyword">new</span> Zoo&lt;Dog&gt;();</span><br><span class="line">Dog dog = dogZoo.get(<span class="number">1</span>);</span><br><span class="line"><span class="comment">// 搞一个只有小猫的动物园</span></span><br><span class="line">Zoo&lt;Cat&gt; catZoo = <span class="keyword">new</span> Zoo&lt;Cat&gt;();</span><br><span class="line">Cat cat = catZoo.get(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
-<h3 id="泛型怎么用"><a href="#泛型怎么用" class="headerlink" title="泛型怎么用"></a>泛型怎么用</h3><h4 id="泛型类"><a href="#泛型类" class="headerlink" title="泛型类"></a>泛型类</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T e)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 搞一个各种小动物的动物园</span><br>Zoo&lt;Animal&gt; animalZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Animal&gt;();<br>animalZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<br>animalZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Cat</span>());<br><span class="hljs-type">Animal</span> <span class="hljs-variable">animal</span> <span class="hljs-operator">=</span> animalZoo.get(<span class="hljs-number">1</span>);<br><span class="hljs-comment">// 搞一个只有小狗的动物园</span><br>Zoo&lt;Dog&gt; dogZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Dog&gt;();<br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog</span> <span class="hljs-operator">=</span> dogZoo.get(<span class="hljs-number">1</span>);<br><span class="hljs-comment">// 搞一个只有小猫的动物园</span><br>Zoo&lt;Cat&gt; catZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Cat&gt;();<br><span class="hljs-type">Cat</span> <span class="hljs-variable">cat</span> <span class="hljs-operator">=</span> catZoo.get(<span class="hljs-number">1</span>);<br></code></pre></td></tr></table></figure>
+
+<h3 id="泛型怎么用"><a href="#泛型怎么用" class="headerlink" title="泛型怎么用"></a>泛型怎么用</h3><h4 id="泛型类"><a href="#泛型类" class="headerlink" title="泛型类"></a>泛型类</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(T e)</span> &#123;<br>        <br>    &#125;<br>    <span class="hljs-keyword">public</span> T <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>Zoo类其实就是一个带泛型的类，声明类的时候就需要给类一个类型，例如下面</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Zoo&lt;Dog&gt; dogZoo = <span class="keyword">new</span> Zoo&lt;Dog&gt;();</span><br><span class="line">dogZoo.add(<span class="keyword">new</span> Dog());</span><br></pre></td></tr></table></figure>
-<h4 id="泛型接口"><a href="#泛型接口" class="headerlink" title="泛型接口"></a>泛型接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Food</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">eat</span><span class="params">(T food)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Cat</span> <span class="keyword">extends</span> <span class="title">Animal</span> <span class="keyword">implements</span> <span class="title">Food</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">eat</span><span class="params">(String food)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Java">Zoo&lt;Dog&gt; dogZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Dog&gt;();<br>dogZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<br></code></pre></td></tr></table></figure>
+
+<h4 id="泛型接口"><a href="#泛型接口" class="headerlink" title="泛型接口"></a>泛型接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">Food</span>&lt;T&gt; &#123;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">eat</span><span class="hljs-params">(T food)</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Cat</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Animal</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Food</span>&lt;String&gt; &#123;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">eat</span><span class="hljs-params">(String food)</span> &#123;<br><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>声明类使用接口泛型的时候需要把泛型类型一块定义好</p>
-<h4 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function"><span class="keyword">void</span> <span class="title">addE</span><span class="params">(E e)</span></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 使用</span></span><br><span class="line">dogZoo.addE(dog1);</span><br></pre></td></tr></table></figure>
+<h4 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> &lt;E&gt; <span class="hljs-keyword">void</span> <span class="hljs-title function_">addE</span><span class="hljs-params">(E e)</span>&#123;<br>&#125;<br><span class="hljs-comment">// 使用</span><br>dogZoo.addE(dog1);<br></code></pre></td></tr></table></figure>
+
 <p>这里有个容易迷惑的地方，如下面所示</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">     T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">addT</span><span class="params">(T t)</span></span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>     T[] animals;<br><br>    <span class="hljs-keyword">public</span> T <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span>&#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>    <span class="hljs-keyword">public</span> &lt;T&gt; <span class="hljs-keyword">void</span> <span class="hljs-title function_">addT</span><span class="hljs-params">(T t)</span>&#123;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这里的addT方法的T和类Zoo上的T其实代表的不是一个类型，方法上的类型是优先级是高于类上面的泛型，在我们正常使用过程中，最好不要出现类泛型和方法泛型使用同样的字母表示。</p>
 <h4 id="泛型静态方法"><a href="#泛型静态方法" class="headerlink" title="泛型静态方法"></a>泛型静态方法</h4><p>如下例子</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T e)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> T <span class="title">staticT</span><span class="params">(T t)</span></span>&#123;<span class="comment">// 1 报错</span></span><br><span class="line">        <span class="keyword">return</span> t;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(T e)</span> &#123;<br><br>    &#125;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> T <span class="hljs-title function_">staticT</span><span class="hljs-params">(T t)</span>&#123;<span class="hljs-comment">// 1 报错</span><br>        <span class="hljs-keyword">return</span> t;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这时代码行1是报错的，类中的静态方法使用泛型的话，要自己定义一个类型，如下面所示：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T e)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="function">E <span class="title">staticE</span><span class="params">(E e)</span></span>&#123;<span class="comment">// 1 正常不报错</span></span><br><span class="line">        <span class="keyword">return</span> e;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="多个泛型类型"><a href="#多个泛型类型" class="headerlink" title="多个泛型类型"></a>多个泛型类型</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>, <span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line">    <span class="keyword">private</span> E[] Zookeepers;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(T e)</span> &#123;<br><br>    &#125;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> &lt;E&gt; E <span class="hljs-title function_">staticE</span><span class="hljs-params">(E e)</span>&#123;<span class="hljs-comment">// 1 正常不报错</span><br>        <span class="hljs-keyword">return</span> e;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="多个泛型类型"><a href="#多个泛型类型" class="headerlink" title="多个泛型类型"></a>多个泛型类型</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T, E&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br>    <span class="hljs-keyword">private</span> E[] Zookeepers;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <h3 id="协变，逆变是个啥？"><a href="#协变，逆变是个啥？" class="headerlink" title="协变，逆变是个啥？"></a>协变，逆变是个啥？</h3><p><strong>协变，逆变，不型变，通俗理解</strong></p>
-<p><strong>invariance(不型变)</strong>：就是上述例子中的Zoo&lt; Animal&gt;和Zoo&lt; Dog&gt;没有关系</p>
-<p><strong>covariance(协变)</strong>: Zoo<dog> 是 Zoo<animal> 的子类型</animal></dog></p>
-<p><strong>contravariance(逆变)</strong>:Zoo<animal> 是 Zoo<dog> 的子类型</dog></animal></p>
-<p>当然上面的说法在Java中是不准确的，在Java中Zoo<animal>和Zoo<dog>总是没有关系的，但是为了方便理    解先这么表示，正确的应该是Zoo<dog> 是 Zoo&lt;?extend Animal&gt; 的子类型，Zoo<animal> 是 Zoo&lt;? super     Dog&gt; 的子类型（子类型和子类也不是一个概念）。</animal></dog></dog></animal></p>
+<p>**invariance(不型变)**：就是上述例子中的Zoo&lt; Animal&gt;和Zoo&lt; Dog&gt;没有关系</p>
+<p><strong>covariance(协变)</strong>: Zoo<Dog> 是 Zoo<Animal> 的子类型</p>
+<p><strong>contravariance(逆变)</strong>:Zoo<Animal> 是 Zoo<Dog> 的子类型</p>
+<p>当然上面的说法在Java中是不准确的，在Java中Zoo<Animal>和Zoo<Dog>总是没有关系的，但是为了方便理	解先这么表示，正确的应该是Zoo<Dog> 是 Zoo&lt;?extend Animal&gt; 的子类型，Zoo<Animal> 是 Zoo&lt;? super 	Dog&gt; 的子类型（子类型和子类也不是一个概念）。</p>
 <p><strong>Java中泛型为什么是不型变的</strong></p>
 <p>假如Java的泛型不是不型变的，看下面的代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Zoo&lt;Dog&gt; dogZoo = <span class="keyword">new</span> Zoo&lt;Dog&gt;(); <span class="comment">// 1</span></span><br><span class="line">Zoo&lt;Animal1&gt; animalZoo = dogZoo; <span class="comment">// 2 报错</span></span><br><span class="line">animalZoo.add(<span class="keyword">new</span> Cat()); <span class="comment">//3</span></span><br></pre></td></tr></table></figure>
-<p>在Java中代码行2是不被编译器允许的，假如他被允许，我们都知道在Java中代码行1中的dogZoo其实是指向new Zoo<dog>()对象的一个引用，同理在代码行2中animalZoo也相当于是一个指向了new Zoo<zoo>()对象的引用，所以此时animalZoo按理说只能存Dog才对，如果代码行2被允许，那么代码行3也要被允许，但是这明显是不对的，因为此时animalZoo只能存Dog类型才对。所以如果代码行2允许的话，那么代码行3就不能被允许，也就是animalZoo的add方法就不能被允许，如果这样的话所有的泛型类都不被允许使用add方法了，那指定是不可以的。所以最理想的状态是有一个泛型类是没有add方法的，也就衍生出了协变。</zoo></dog></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java">Zoo&lt;Dog&gt; dogZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Dog&gt;(); <span class="hljs-comment">// 1</span><br>Zoo&lt;Animal1&gt; animalZoo = dogZoo; <span class="hljs-comment">// 2 报错</span><br>animalZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Cat</span>()); <span class="hljs-comment">//3</span><br></code></pre></td></tr></table></figure>
+
+<p>在Java中代码行2是不被编译器允许的，假如他被允许，我们都知道在Java中代码行1中的dogZoo其实是指向new Zoo<Dog>()对象的一个引用，同理在代码行2中animalZoo也相当于是一个指向了new Zoo<Zoo>()对象的引用，所以此时animalZoo按理说只能存Dog才对，如果代码行2被允许，那么代码行3也要被允许，但是这明显是不对的，因为此时animalZoo只能存Dog类型才对。所以如果代码行2允许的话，那么代码行3就不能被允许，也就是animalZoo的add方法就不能被允许，如果这样的话所有的泛型类都不被允许使用add方法了，那指定是不可以的。所以最理想的状态是有一个泛型类是没有add方法的，也就衍生出了协变。</p>
 <p><strong>协变</strong></p>
 <p>Java中的协变通过给泛型类加<code>? extend</code>来实现，这样编译器就会允许如代码行1中那样写了，为了避免上面的问题，同时禁用了add方法。这样可以保证不会出错，并且animalZoo可以代表此泛型类及其字类泛型。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Zoo&lt;? extends Animal&gt; animalZoo = dogZoo;<span class="comment">//1 </span></span><br><span class="line">animalZoo.add(<span class="keyword">new</span> Cat()); <span class="comment">// 2报错</span></span><br><span class="line">animalZoo.add(<span class="keyword">new</span> Dog());<span class="comment">// 3报错</span></span><br><span class="line">Animal animal = animalZoo.get(<span class="number">1</span>);<span class="comment">// 4</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Java">Zoo&lt;? <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Animal</span>&gt; animalZoo = dogZoo;<span class="hljs-comment">//1 </span><br>animalZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Cat</span>()); <span class="hljs-comment">// 2报错</span><br>animalZoo.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>());<span class="hljs-comment">// 3报错</span><br><span class="hljs-type">Animal</span> <span class="hljs-variable">animal</span> <span class="hljs-operator">=</span> animalZoo.get(<span class="hljs-number">1</span>);<span class="hljs-comment">// 4</span><br></code></pre></td></tr></table></figure>
+
 <p>代码行2和代码行3都不行，即使代码行3在此处应该可以，但是对于animalZoo来说，此时它可以指向任何它本身以及其字类的泛型类。</p>
 <p>其实说到这里大家虽然懂了这些，但不禁有个疑惑，上面的情况完全没有必要使用代码行1那样的操作，因为实际写代码的时候根本不会这么用，那就是这么做的意义是什么呢？看下面的两个需求：</p>
 <p>1.需要获取不同类型动物园的符合某种动物特性的动物</p>
 <p>没有使用<code>? extend</code>写法，有重复代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (Dog dog: dogZoo.animals)&#123;</span><br><span class="line">    <span class="comment">// 符合某种条件代码</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (Animal animal: animalZoo.animals)&#123;</span><br><span class="line">    <span class="comment">// 符合某种条件代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">for</span> (Dog dog: dogZoo.animals)&#123;<br>    <span class="hljs-comment">// 符合某种条件代码</span><br>&#125;<br><span class="hljs-keyword">for</span> (Animal animal: animalZoo.animals)&#123;<br>    <span class="hljs-comment">// 符合某种条件代码</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>改进，使用<code>? extend</code>特性：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Animal <span class="title">getAnimal</span><span class="params">(Zoo&lt;? extends Animal&gt; zoo)</span></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (Animal animal : zoo.animals)&#123;</span><br><span class="line">        <span class="comment">// 符合某种条件</span></span><br><span class="line">        <span class="keyword">return</span> animal;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">getAnimal(dogZoo);</span><br><span class="line">getAnimal(animalZoo);</span><br><span class="line">getAnimal(catZoo);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> Animal <span class="hljs-title function_">getAnimal</span><span class="hljs-params">(Zoo&lt;? extends Animal&gt; zoo)</span>&#123;<br>    <span class="hljs-keyword">for</span> (Animal animal : zoo.animals)&#123;<br>        <span class="hljs-comment">// 符合某种条件</span><br>        <span class="hljs-keyword">return</span> animal;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;<br>&#125;<br>getAnimal(dogZoo);<br>getAnimal(animalZoo);<br>getAnimal(catZoo);<br></code></pre></td></tr></table></figure>
+
 <p>方便</p>
 <p>2.Animal动物园需要一群一群的添加小动物</p>
 <p>没有<code>? extend</code>的写法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(Collection&lt;T&gt; animals)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addAll</span><span class="hljs-params">(Collection&lt;T&gt; animals)</span> &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这会带来一个问题，animalZoo不能添加dogZoo的小动物，也不能添加catZoo的小动物，明明是可以的，所以修改一下，改成下面：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(Collection&lt;? extend T&gt; animals)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addAll</span><span class="hljs-params">(Collection&lt;? extend T&gt; animals)</span> &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这样就可以实现上面的需求了。</p>
 <p><strong>逆变</strong></p>
 <p>与协变相反的是逆变，在Java中使用<code>? super</code>来表示，即把泛型类型限定到了此类以及它的父类上，如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Zoo&lt;? super Animal&gt; animalZoo1 = dogZoo; // 1 报错</span><br><span class="line">Zoo&lt;? super Animal&gt; animalZoo1 = animalZoo; // 2 </span><br><span class="line">animalZoo1.add(new Dog());// 3</span><br><span class="line">animalZoo1.add(new Cat());// 4</span><br><span class="line">Zoo&lt;? super Dog&gt; dogZoo1 = animalZoo;// 5</span><br><span class="line">dogZoo1.add(new Dog());// 6</span><br><span class="line">dogZoo1.add(new Animal());// 7 报错</span><br></pre></td></tr></table></figure>
+<figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haxe">Zoo&lt;? <span class="hljs-keyword">super</span> Animal&gt; animalZoo1 = dogZoo; <span class="hljs-comment">// 1 报错</span><br>Zoo&lt;? <span class="hljs-keyword">super</span> Animal&gt; animalZoo1 = animalZoo; <span class="hljs-comment">// 2 </span><br>animalZoo1.add(<span class="hljs-keyword">new</span> <span class="hljs-type">Dog</span>());<span class="hljs-comment">// 3</span><br>animalZoo1.add(<span class="hljs-keyword">new</span> <span class="hljs-type">Cat</span>());<span class="hljs-comment">// 4</span><br>Zoo&lt;? <span class="hljs-keyword">super</span> Dog&gt; dogZoo1 = animalZoo;<span class="hljs-comment">// 5</span><br>dogZoo1.add(<span class="hljs-keyword">new</span> <span class="hljs-type">Dog</span>());<span class="hljs-comment">// 6</span><br>dogZoo1.add(<span class="hljs-keyword">new</span> <span class="hljs-type">Animal</span>());<span class="hljs-comment">// 7 报错</span><br></code></pre></td></tr></table></figure>
+
 <p>从这个例子中我们可以发现被<code>? super</code> 修饰后只能指向本身及其父类，例如代码行2和代码行5，此时只能向里面添加super修饰符修饰的类型，因为此时指向的是本身的泛型类或者父类的泛型类，对于代码行7，在<strong>此时</strong>按理说应该是正确的，因为dogZoo1指向了Animal类型的对象，但是对于dogZoo1来说也有可能指向Dog类型的对象，所以编译器就做了一个限制，只能添加super后面类型的对象，对于然后?super修饰的类型指向范围被限定为本身及其父类。</p>
 <p>那么同样对于<code>? super</code>的使用又有哪些地方用到呢，</p>
 <p>我想对两条条小狗做一些每个小狗入园都要做的操作（比如洗澡打针）后再加入不同的动物园</p>
 <p>不优雅的做法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Dog dog1 = <span class="keyword">new</span> Dog();</span><br><span class="line">Dog dog2 = <span class="keyword">new</span> Dog();</span><br><span class="line"><span class="comment">// 省略dog1洗澡打针代码</span></span><br><span class="line"><span class="comment">// 省略dog2洗澡打针代码</span></span><br><span class="line">dogZoo.add(dog1);</span><br><span class="line">animalZoo.add(dog2);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-type">Dog</span> <span class="hljs-variable">dog1</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>();<br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog2</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Dog</span>();<br><span class="hljs-comment">// 省略dog1洗澡打针代码</span><br><span class="hljs-comment">// 省略dog2洗澡打针代码</span><br>dogZoo.add(dog1);<br>animalZoo.add(dog2);<br></code></pre></td></tr></table></figure>
+
 <p>这里就出现了重复代码就是省略的那部分，然后修改一下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">addDog(dogZoo,dog1);</span><br><span class="line">addDog(animalZoo,dog2);</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addDog</span><span class="params">(Zoo&lt;?<span class="keyword">super</span> Dog&gt; canAdddogZoo,Dog dog)</span></span>&#123;</span><br><span class="line">    <span class="comment">// 省略dog洗澡打针代码</span></span><br><span class="line">    canAdddogZoo.add(dog);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java">addDog(dogZoo,dog1);<br>addDog(animalZoo,dog2);<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addDog</span><span class="hljs-params">(Zoo&lt;?<span class="hljs-built_in">super</span> Dog&gt; canAdddogZoo,Dog dog)</span>&#123;<br>    <span class="hljs-comment">// 省略dog洗澡打针代码</span><br>    canAdddogZoo.add(dog);<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>是不是好了很多。</p>
 <p><strong>协变逆变总结</strong></p>
-<p>对于<code>? extend</code>和<code>? super</code>的使用，我们只需要记住当需要返回T的时候就用<code>?extend</code>，是一个生产者；当需要写入一个T的时候使用<code>?super</code>，他是一个消费者。</p>
+<p>对于<code>? extend </code>和<code> ? super</code>的使用，我们只需要记住当需要返回T的时候就用<code>?extend</code>，是一个生产者；当需要写入一个T的时候使用<code>?super</code>，他是一个消费者。</p>
 <p>这一部分是比较难以理解的，主要是不清楚为什么和怎么用，我也是搞了很久才搞明白，查阅了好多文章，总感觉少了点什么，所以我也就把我自己的理解写了下，有些表达应该是欠严谨，发现问题的朋友可以给我留言，我们一块探讨。</p>
 <h3 id="泛型在Java中的实现（类型擦除）"><a href="#泛型在Java中的实现（类型擦除）" class="headerlink" title="泛型在Java中的实现（类型擦除）"></a>泛型在Java中的实现（类型擦除）</h3><p>Java是通过类型擦除来实现泛型的：也就是说我们写出来的泛型代码跟虚拟机去执行的代码并不是一样的代码</p>
 <p>比如我们上面的例子中：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T e)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(T e)</span> &#123;<br><br>    &#125;<br>    <span class="hljs-keyword">public</span> T <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>在要执行的虚拟机的眼里是这个样子的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Zoo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Object[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(Object e)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Zoo</span> &#123;<br>    <span class="hljs-keyword">private</span> Object[] animals;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">add</span><span class="hljs-params">(Object e)</span> &#123;<br><br>    &#125;<br>    <span class="hljs-keyword">public</span> Object <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>再比如我们写的代码是这个样子的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Zoo&lt;Dog&gt; dogZoo = <span class="keyword">new</span> Zoo&lt;Dog&gt;();</span><br><span class="line"></span><br><span class="line">Dog dog = dogZoo.get(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java">Zoo&lt;Dog&gt; dogZoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>&lt;Dog&gt;();<br><br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog</span> <span class="hljs-operator">=</span> dogZoo.get(<span class="hljs-number">1</span>);<br></code></pre></td></tr></table></figure>
+
 <p>虚拟机里看到是这个样子的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Zoo dogZoo = <span class="keyword">new</span> Zoo();</span><br><span class="line"></span><br><span class="line">Dog dog = (Dog) dogZoo.get(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-type">Zoo</span> <span class="hljs-variable">dogZoo</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Zoo</span>();<br><br><span class="hljs-type">Dog</span> <span class="hljs-variable">dog</span> <span class="hljs-operator">=</span> (Dog) dogZoo.get(<span class="hljs-number">1</span>);<br></code></pre></td></tr></table></figure>
+
 <p><strong>带来的问题</strong></p>
 <ol>
 <li><p>泛型T不可以使用基本数据类型如int，double等，因为擦除后是Object嘛</p>
@@ -162,85 +392,362 @@
 <li><p>无法获得泛型的Class</p>
 </li>
 <li><p>不能实例化泛型，例如T()，但是可以通过反射来实例化T的类型，如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Zoo</span><span class="params">(Class&lt;T&gt; tClass)</span></span>&#123;</span><br><span class="line">        tClass.newInstance();<span class="comment">// 会提示需要捕获异常</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-title function_">Zoo</span><span class="hljs-params">(Class&lt;T&gt; tClass)</span>&#123;<br>        tClass.newInstance();<span class="hljs-comment">// 会提示需要捕获异常</span><br>&#125;<br></code></pre></td></tr></table></figure></li>
 </ol>
 <h3 id="Kotlin中的泛型有啥不同"><a href="#Kotlin中的泛型有啥不同" class="headerlink" title="Kotlin中的泛型有啥不同"></a>Kotlin中的泛型有啥不同</h3><p>Kotlin与Java在实现泛型的底层原理是一致的，毕竟Kotlin也是要转换成Java的，但是Kotlin在Java的基础上做了一些比较方便的改变：</p>
 <p>替换<code>? extend</code>为<code>out</code> <code>? super</code>为<code>in</code></p>
 <p>Java对型变的处理都放到了使用处，导致有一些类只是生产者也需要在使用处多次定义</p>
 <p>还是上面那个动物园的例子，此时的动物园只有get方法，没有add方法，说明只是一个生产者</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ZooProducer</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> T[] animals;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> animals[index];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">ZooProducer&lt;Animal1&gt; animal1Zoo = <span class="keyword">new</span> ZooProducer&lt;Dog&gt;();<span class="comment">// 1 报错</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ZooProducer</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">private</span> T[] animals;<br><br>    <span class="hljs-keyword">public</span> T <span class="hljs-title function_">get</span><span class="hljs-params">(<span class="hljs-type">int</span> index)</span> &#123;<br>        <span class="hljs-keyword">return</span> animals[index];<br>    &#125;<br>&#125;<br>ZooProducer&lt;Animal1&gt; animal1Zoo = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ZooProducer</span>&lt;Dog&gt;();<span class="hljs-comment">// 1 报错</span><br></code></pre></td></tr></table></figure>
+
 <p>此时代码行1是报错的，这不意外，虽然这不太合适，毕竟我只是生产者，但是编译器不知道，但是这个问题在Kotlin中得到了解决，Kotlin可以在类声明处进行限制，如下代码</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZooProducer1</span>&lt;<span class="type">out T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> animals: Array&lt;<span class="keyword">out</span> T&gt; = TODO()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">get</span><span class="params">()</span></span>: T &#123;</span><br><span class="line">        <span class="keyword">return</span> animals[<span class="number">1</span>]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> animalsZooProducer: ZooProducer1&lt;Animal1&gt; = ZooProducer1&lt;Dog&gt;()<span class="comment">// 1正常</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">ZooProducer1</span>&lt;<span class="hljs-type">out T</span>&gt; &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> animals: Array&lt;<span class="hljs-keyword">out</span> T&gt; = TODO()<br><br>    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">get</span><span class="hljs-params">()</span></span>: T &#123;<br>        <span class="hljs-keyword">return</span> animals[<span class="hljs-number">1</span>]<br>    &#125;<br>&#125;<br><span class="hljs-keyword">var</span> animalsZooProducer: ZooProducer1&lt;Animal1&gt; = ZooProducer1&lt;Dog&gt;()<span class="hljs-comment">// 1正常</span><br></code></pre></td></tr></table></figure>
+
 <p>这就带来了极大的便利，对于<code>? super</code>和<code>in</code>也是同理</p>
 <p>当一个类不能唯一确定一定是生产者或者一定是消费者的时候，和Java一样，在使用处型变就可以。其他的好像就没啥不一样的，总体而言，Kotlin的泛型是更简洁，灵活而且严格的，这也是Kotlin的特点。</p>
 <p>这篇博客写了好久才写完，写到后面有点后劲不足，但是我相信我还是把泛型从一个新的角度表达了出来，希望研究泛型的小伙伴能够有一点点收获，泛型在实际编码过程中也是很有用的。</p>
 <p>参考：</p>
-<p><a href="https://www.liaoxuefeng.com/wiki/1252599548343744/1255945193293888" target="_blank" rel="noopener">泛型 - 廖雪峰的官方网站 (liaoxuefeng.com)</a></p>
-<p><a href="https://www.jianshu.com/p/0c2948f7e656" target="_blank" rel="noopener">Java和Kotlin中泛型的协变、逆变和不变 - 简书 (jianshu.com)</a></p>
-   
-            <br>
-            <hr><br>
-            
-                <div id="article-previous">
-                    <a href="/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/" data-toggle="tooltip" data-placement="top" title="【源码分析】RocketMQ消息追踪源码详解">&larr; 上一篇</a>
-                </div>
-                
-                
-                <div id="article-next">
-                    <a href="/2021/03/01/Protocol-Buffer编码/" data-toggle="tooltip" data-placement="top" title="Protocol Buffer编码">下一篇 &rarr;</a>
-                </div>
-            
-            <br><br>
-            <hr>
-        </div>
-    </div>
+<p><a target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/1252599548343744/1255945193293888">泛型 - 廖雪峰的官方网站 (liaoxuefeng.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/0c2948f7e656">Java和Kotlin中泛型的协变、逆变和不变 - 简书 (jianshu.com)</a></p>
 
-    <div id="comment">
-        
-        
-    <h2>留言</h2>
-    <div id="vcomments">
-    </div>
-    <script>
-        var valine = new Valine({
-        el: '#vcomments', 
-        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
-        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
-    
-        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
-        emojiMaps: {
-          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
-          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
-          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
-          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
-          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
-          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
-          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
-          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
-          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
-          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
-          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
-          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
-          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
-          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
-          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
-          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
-          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
-          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
-          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
-          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
-          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
-        }
-    })
-    </script>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
 
+<span class="category-chains">
+  
+  
     
+      <span class="category-chain">
+        
+  <a href="/categories/Kotlin/" class="category-chain-item">Kotlin</a>
+  
+  
+
+      </span>
     
-    
-     
+  
+</span>
+
     </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/">#Java</a>
+      
+        <a href="/tags/%E6%B3%9B%E5%9E%8B/">#泛型</a>
+      
+        <a href="/tags/Kotlin/">#Kotlin</a>
+      
+    </div>
+  
 </div>
-    <script src="/Module/main.js"></script>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Java泛型详解（对比Kotlin）</div>
+      <div>http://yoursite.com/2021/03/14/Java泛型详解（对比Kotlin）/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>wz</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年3月14日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/04/29/%E3%80%90%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E3%80%91RocketMQ%E6%B6%88%E6%81%AF%E8%BF%BD%E8%B8%AA%E6%BA%90%E7%A0%81%E8%AF%A6%E8%A7%A3/" title="【源码分析】RocketMQ消息追踪源码详解">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">【源码分析】RocketMQ消息追踪源码详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/03/01/Protocol-Buffer%E7%BC%96%E7%A0%81/" title="Protocol Buffer编码">
+                        <span class="hidden-mobile">Protocol Buffer编码</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

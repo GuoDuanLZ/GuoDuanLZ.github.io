@@ -1,178 +1,656 @@
+
+
 <!DOCTYPE html>
-<html lang="cn">
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Java作为一门面向对象的语言，需要所有的代码都是以类为基础的，我们每次写Java代码的时候第一件事情就是先新建一个类，所以我们从Java入门Kotlin系列教程就先从类入手，看一下Kotlin是怎么新建和处理一个类的，让我们开始吧~">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从Java入门Kotlin-Kotlin类">
+<meta property="og:url" content="http://yoursite.com/2020/09/18/%E4%BB%8EJava%E5%85%A5%E9%97%A8Kotlin-Kotlin%E7%B1%BB/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="Java作为一门面向对象的语言，需要所有的代码都是以类为基础的，我们每次写Java代码的时候第一件事情就是先新建一个类，所以我们从Java入门Kotlin系列教程就先从类入手，看一下Kotlin是怎么新建和处理一个类的，让我们开始吧~">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-17T23:25:28.000Z">
+<meta property="article:modified_time" content="2020-11-07T08:45:58.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="Kotlin">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>从Java入门Kotlin-Kotlin类 - 果断的荔枝</title>
 
-<!--ＪQuery-->
-<script src="/Module/JQuery/jquery.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
-<!--Vue.js-->
-<script src="/Module/vue/vue.js"></script>
-<!--饿了么Ｕi-->
-<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
-<script src="/Module/ElementUi/index.js"></script>
 
-<!--highlight-->
-<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
-<script src="/Module/highlight/highlight.min.js"></script>
 
-<!--axios-->
-<script src="/Module/axios/axios.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
 
-<!--评论-->
-<script src="/Module/comment/valine/Valine.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
 
-<!--主题样式-->
-<link rel="stylesheet" href="/Module/style.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
-<!--设置页面描述与关键字,封面图片-->
 
-    <meta name="description" content="Java作为一门面向对象的语言，需要所有的代码都是以类为基础的，我们每次写Java代码的时候第一件事情就是先新建一个类，所以我们从Java入门Kotlin系列教程就先从类入手，看一下Kotlin是怎么新建和处理一个类的，让我们开始吧~" />
-    <meta name="keywords" content="" />
-    <title>从Java入门Kotlin-Kotlin类</title>
-    
-    <style>
-        #content #title {
-            background-image: url('/background.jpg');
-        }
-    </style>
-    
 
-</head>
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
 <body>
-    <div id="app" v-cloak>
-    <div id="content">
-        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
-<el-dialog :visible.sync="visible"  title="前往">
-    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
-    <div id="searchResult"></div>
+  
 
-    <br>
-    <div id="Menu">
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="从Java入门Kotlin-Kotlin类"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-09-18 07:25" pubdate>
+          2020年9月18日 早上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          28 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
     </div>
 
-</el-dialog>
-
-<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
-
-
-
-        
-        <div id="title">
-            <h1>
-                从Java入门Kotlin-Kotlin类<br>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">从Java入门Kotlin-Kotlin类</h1>
+            
+            
+              <div class="markdown-body">
                 
-                <p>作者：wz<br>编写：2020-09-18</p>
-            </h1>
-        </div>
-        
-
-        <div id="article">
-            <meta name="referrer" content="no-referrer">
+                <meta name="referrer" content="no-referrer" />
 
 <blockquote>
-<p>​        介于是Kotlin系列的第一篇文章，按照惯例应该先吹一波Kotlin怎么怎么好，我觉着这个事情还是等教程结束再来谈，到时候会单独出一篇文章，现在只知道是Better Java就可以了。</p>
-<p>​        我是因为工作原因—公司项目大部分是Kotlin，才接触然后学习的Kotlin，我觉着现在提起Kotlin大家的第一反应应该是安卓开发，确实Kotlin在安卓领域占有绝对的优势，但对于我们服务端来说Kotlin占的份额还是很小的，像我们公司服务端全转换用Kotlin的就更少之又少了，经过一段时间的学习和使用，逐渐觉着Kotlin已经有能力担任我们服务端的开发，并且在我们公司已经正常稳定运行了很久了，代码也相比之前优雅了许多，所以我也想为Kotlin的普及做出一小份力，从一个从前Java服务端出发，对比Java和Kotlin的异同，来入门这款优秀的语言。介于我的Java水平和Kotlin水平都有限，文章有错误或不对的地方希望大家不吝指教，我们一块探讨。</p>
+<p>​		介于是Kotlin系列的第一篇文章，按照惯例应该先吹一波Kotlin怎么怎么好，我觉着这个事情还是等教程结束再来谈，到时候会单独出一篇文章，现在只知道是Better Java就可以了。</p>
+<p>​		我是因为工作原因—公司项目大部分是Kotlin，才接触然后学习的Kotlin，我觉着现在提起Kotlin大家的第一反应应该是安卓开发，确实Kotlin在安卓领域占有绝对的优势，但对于我们服务端来说Kotlin占的份额还是很小的，像我们公司服务端全转换用Kotlin的就更少之又少了，经过一段时间的学习和使用，逐渐觉着Kotlin已经有能力担任我们服务端的开发，并且在我们公司已经正常稳定运行了很久了，代码也相比之前优雅了许多，所以我也想为Kotlin的普及做出一小份力，从一个从前Java服务端出发，对比Java和Kotlin的异同，来入门这款优秀的语言。介于我的Java水平和Kotlin水平都有限，文章有错误或不对的地方希望大家不吝指教，我们一块探讨。</p>
 </blockquote>
 <h3 id="类声明"><a href="#类声明" class="headerlink" title="类声明"></a>类声明</h3><p>Java和Kotlin单从类声明上说从表面上看上去是没有什么差别的</p>
 <p>Java：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnimalJava</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalJava</span> &#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>Kotlin:</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>但其实他们之间是有不小的区别的：Java允许创建任意类的子类并重写任意方法，除非显式的去定义成<em>final</em>，这其实是容易造成问题的，基类的代码修改容易使其不符合在子类中的假设。所以Kotlin中为了避免这个问题的发生，Kotlin中的类默认都是<em>final</em>的，如果允许被继承，则需要使用<em>open</em>这个修饰符。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但其实他们之间是有不小的区别的：Java允许创建任意类的子类并重写任意方法，除非显式的去定义成_final_，这其实是容易造成问题的，基类的代码修改容易使其不符合在子类中的假设。所以Kotlin中为了避免这个问题的发生，Kotlin中的类默认都是_final_的，如果允许被继承，则需要使用_open_这个修饰符。</p>
 <p>需要注意的是：在Spring中全部定义为final是不方便的，因为这样的话，Spring的代理就不好使了，所以在Spring中使用Kotlin的时候我们一般会使用一个叫All-Open的插件，它会自动为Spring使用open类的地方加上open，而不用代码中写很多open</p>
 <h3 id="类成员变量"><a href="#类成员变量" class="headerlink" title="类成员变量"></a>类成员变量</h3><p>了解先来看下Java和Kotlin类中成员变量的定义</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnimalJava</span> </span>&#123;</span><br><span class="line">  String name;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> name;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.name = name;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line">    var name: String = <span class="string">""</span> <span class="comment">// 或者 val name: String = ""</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalJava</span> &#123;<br>  String name;<br>  <br>  <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getName</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> name;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">setName</span><span class="hljs-params">(String name)</span> &#123;<br>    <span class="hljs-built_in">this</span>.name = name;<br>  &#125;<br>&#125;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br>    <span class="hljs-keyword">var</span> name: String = <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// 或者 val name: String = &quot;&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>其中Java中的name默认的是private，如果外部需要访问这个成员变量是需要显式调用name的get和set方法的，而Kotlin中默认的是public，需要一个默认值，并且Kotlin中区分了val和var，外部访问和赋值是不需要显式调用get和set方法。</p>
 <p>不知道大家有没有对Java中成员变量设成private，然后提供get和set方法有过好奇，我查着大概说是为了风中的特性来将数据与行为进行分离。而Kotlin中则直接是一个public的成员变量，岂不是直接破坏了Java中的封装的特性，其实这里Kotlin并没有：Kotlin中也是可以使用get和set的，当我们不定义的话相当于使用默认的get和set，我们也可以显式自定义get和set，如下：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name: String = <span class="string">""</span></span><br><span class="line">  	<span class="comment">//不写的话默认是这个样子的，其中field是一个幕后字段代表着name</span></span><br><span class="line">    <span class="keyword">set</span>(value) &#123; field = value &#125;</span><br><span class="line">    <span class="keyword">get</span>() &#123;<span class="keyword">return</span> field&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> animal = AnimalKotlin()</span><br><span class="line">  	<span class="comment">//这里看似是直接赋值，其实是调用了set方法</span></span><br><span class="line">    animal.name = <span class="string">"dog"</span></span><br><span class="line">    print(animal.name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br>    <span class="hljs-keyword">var</span> name: String = <span class="hljs-string">&quot;&quot;</span><br>  	<span class="hljs-comment">//不写的话默认是这个样子的，其中field是一个幕后字段代表着name</span><br>    <span class="hljs-keyword">set</span>(value) &#123; field = value &#125;<br>    <span class="hljs-keyword">get</span>() &#123;<span class="hljs-keyword">return</span> field&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>    <span class="hljs-keyword">val</span> animal = AnimalKotlin()<br>  	<span class="hljs-comment">//这里看似是直接赋值，其实是调用了set方法</span><br>    animal.name = <span class="hljs-string">&quot;dog&quot;</span><br>    print(animal.name)<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>看完上面我说的是不是感觉好像是有什么黑魔法一样，全是我自己根据表象进行猜测的，口说无凭，我们直接把看一下上面代码的字节码转成Java之后的代码是什么样子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line">   <span class="meta">@NotNull</span></span><br><span class="line">   <span class="keyword">private</span> String name = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@NotNull</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.name;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(@NotNull String value)</span> </span>&#123;</span><br><span class="line">      Intrinsics.checkParameterIsNotNull(value, <span class="string">"value"</span>);</span><br><span class="line">      <span class="keyword">this</span>.name = value;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlinKt</span> </span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      AnimalKotlin animal = <span class="keyword">new</span> AnimalKotlin();</span><br><span class="line">      animal.setName(<span class="string">"dog"</span>);</span><br><span class="line">      String var1 = animal.getName();</span><br><span class="line">      <span class="keyword">boolean</span> var2 = <span class="keyword">false</span>;</span><br><span class="line">      System.out.print(var1);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// $FF: synthetic method</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] var0)</span> </span>&#123;</span><br><span class="line">      main();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br>   <span class="hljs-meta">@NotNull</span><br>   <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">name</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;&quot;</span>;<br><br>   <span class="hljs-meta">@NotNull</span><br>   <span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> String <span class="hljs-title function_">getName</span><span class="hljs-params">()</span> &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.name;<br>   &#125;<br><br>   <span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">setName</span><span class="hljs-params">(<span class="hljs-meta">@NotNull</span> String value)</span> &#123;<br>      Intrinsics.checkParameterIsNotNull(value, <span class="hljs-string">&quot;value&quot;</span>);<br>      <span class="hljs-built_in">this</span>.name = value;<br>   &#125;<br>&#125;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlinKt</span> &#123;<br>   <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>      <span class="hljs-type">AnimalKotlin</span> <span class="hljs-variable">animal</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AnimalKotlin</span>();<br>      animal.setName(<span class="hljs-string">&quot;dog&quot;</span>);<br>      <span class="hljs-type">String</span> <span class="hljs-variable">var1</span> <span class="hljs-operator">=</span> animal.getName();<br>      <span class="hljs-type">boolean</span> <span class="hljs-variable">var2</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br>      System.out.print(var1);<br>   &#125;<br><br>   <span class="hljs-comment">// $FF: synthetic method</span><br>   <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] var0)</span> &#123;<br>      main();<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这下是不是全都明白了，其实跟Java是一样的，只是当我们使用的时候方便了许多，Kotlin去除了很多模板代码，使代码写起来更方便，如果我想让set或者get私有只需要下面这样处理就可以：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name: String = <span class="string">""</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">set</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这样set方法就是私有了，此时<em>animal.name = “dog”</em>这个是会报错的因为其实就是调用了set方法。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br>    <span class="hljs-keyword">var</span> name: String = <span class="hljs-string">&quot;&quot;</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">set</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这样set方法就是私有了，此时*animal.name &#x3D; “dog”*这个是会报错的因为其实就是调用了set方法。</p>
 <p>当我们使用的不是var而是val的时候，此时只会有get没有set</p>
 <blockquote>
-<p>拓展：成员变量中对null的处理，Kotlin为了解决Java中null的困扰，从源头控制，比如我们例子中<em>var name: String = “”</em>，这样name无论如何都不会为null，当我们使用<em>var name: String? = “”</em>的时候此时name就有可能为null，我们用这个属性的时候就要进行null判断，后面我们会详细介绍null的处理</p>
+<p>拓展：成员变量中对null的处理，Kotlin为了解决Java中null的困扰，从源头控制，比如我们例子中*var name: String &#x3D; “”<em>，这样name无论如何都不会为null，当我们使用</em>var name: String? &#x3D; “”*的时候此时name就有可能为null，我们用这个属性的时候就要进行null判断，后面我们会详细介绍null的处理</p>
 </blockquote>
 <p>讲到这里我们会发现，每个类的属性都会有默认值，我们不想设置默认值怎么办，这里有两个方法：</p>
 <p>其一：作为主构造函数参数（下面要讲），</p>
 <p>其二：使用<em>lateinit</em>，他的意思是延迟初始化，如下：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AnimalKotlin</span> </span>&#123;</span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> name: String</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalKotlin</span> &#123;<br>    <span class="hljs-keyword">lateinit</span> <span class="hljs-keyword">var</span> name: String<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这种使用最多的场景是在spring中的@Autowire，这个还是要记住的，以后会常用</p>
 <p>如上关于类中的属性基本就介绍完了，还有一个知识点是委托属性，这个以后再说，刚开始讲不太好接受</p>
-<h4 id="类的构造"><a href="#类的构造" class="headerlink" title="类的构造"></a>类的构造</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnimalJava</span> </span>&#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AnimalJava</span><span class="params">()</span></span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AnimalJava</span><span class="params">(String name)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="类的构造"><a href="#类的构造" class="headerlink" title="类的构造"></a>类的构造</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">AnimalJava</span> &#123;<br>    String name;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">AnimalJava</span><span class="hljs-params">()</span>&#123;<br>    &#125;<br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">AnimalJava</span><span class="hljs-params">(String name)</span>&#123;<br>        <span class="hljs-built_in">this</span>.name = name;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>Java中的类构造如上面所示，其中包含了一个无参构造方法和一个有参构造方法</p>
-   
-            <br>
-            <hr><br>
-            
-                <div id="article-previous">
-                    <a href="/2020/10/28/PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案/" data-toggle="tooltip" data-placement="top" title="PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案">&larr; 上一篇</a>
-                </div>
-                
-                
-                <div id="article-next">
-                    <a href="/2020/08/01/Spring-Bean的注入/" data-toggle="tooltip" data-placement="top" title="Spring Bean的注入">下一篇 &rarr;</a>
-                </div>
-            
-            <br><br>
-            <hr>
-        </div>
-    </div>
 
-    <div id="comment">
-        
-        
-    <h2>留言</h2>
-    <div id="vcomments">
-    </div>
-    <script>
-        var valine = new Valine({
-        el: '#vcomments', 
-        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
-        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
-    
-        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
-        emojiMaps: {
-          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
-          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
-          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
-          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
-          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
-          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
-          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
-          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
-          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
-          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
-          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
-          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
-          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
-          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
-          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
-          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
-          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
-          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
-          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
-          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
-          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
-        }
-    })
-    </script>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
 
+<span class="category-chains">
+  
+  
     
+      <span class="category-chain">
+        
+  <a href="/categories/Kotlin%E6%95%99%E7%A8%8B/" class="category-chain-item">Kotlin教程</a>
+  
+  
+
+      </span>
     
-    
-     
+  
+</span>
+
     </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Kotlin/">#Kotlin</a>
+      
+    </div>
+  
 </div>
-    <script src="/Module/main.js"></script>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>从Java入门Kotlin-Kotlin类</div>
+      <div>http://yoursite.com/2020/09/18/从Java入门Kotlin-Kotlin类/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>wz</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年9月18日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/10/28/PostgreSQL-%E4%BB%8EMySQL%E5%88%B0PostgreSQL%E4%B8%80%E4%BA%9B%E4%B9%A0%E6%83%AF%E7%94%A8%E6%B3%95%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" title="PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/01/Spring-Bean%E7%9A%84%E6%B3%A8%E5%85%A5/" title="Spring Bean的注入">
+                        <span class="hidden-mobile">Spring Bean的注入</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

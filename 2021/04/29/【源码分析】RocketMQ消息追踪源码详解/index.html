@@ -1,90 +1,296 @@
+
+
 <!DOCTYPE html>
-<html lang="cn">
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="之前有一篇文章通过在使用RocketMQ消息追踪功能遇到的问题及解决方法，与此同时简单看了下RocketMQ的源码，重点在问题解决上。在查问题过程中发现很少有文章来描述此功能从头到尾是如何实现的，然后我就研究了下，通过这篇文章来讲解一下。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【源码分析】RocketMQ消息追踪源码详解">
+<meta property="og:url" content="http://yoursite.com/2021/04/29/%E3%80%90%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E3%80%91RocketMQ%E6%B6%88%E6%81%AF%E8%BF%BD%E8%B8%AA%E6%BA%90%E7%A0%81%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="之前有一篇文章通过在使用RocketMQ消息追踪功能遇到的问题及解决方法，与此同时简单看了下RocketMQ的源码，重点在问题解决上。在查问题过程中发现很少有文章来描述此功能从头到尾是如何实现的，然后我就研究了下，通过这篇文章来讲解一下。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvr98d2j31h608278g.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvxn6ucj313w09swhi.jpg">
+<meta property="article:published_time" content="2021-04-29T12:07:25.000Z">
+<meta property="article:modified_time" content="2021-04-29T14:08:32.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="RocketMQ">
+<meta property="article:tag" content="中间件">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvr98d2j31h608278g.jpg">
+  
+  
+  
+  <title>【源码分析】RocketMQ消息追踪源码详解 - 果断的荔枝</title>
 
-<!--ＪQuery-->
-<script src="/Module/JQuery/jquery.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
-<!--Vue.js-->
-<script src="/Module/vue/vue.js"></script>
-<!--饿了么Ｕi-->
-<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
-<script src="/Module/ElementUi/index.js"></script>
 
-<!--highlight-->
-<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
-<script src="/Module/highlight/highlight.min.js"></script>
 
-<!--axios-->
-<script src="/Module/axios/axios.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
 
-<!--评论-->
-<script src="/Module/comment/valine/Valine.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
 
-<!--主题样式-->
-<link rel="stylesheet" href="/Module/style.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
-<!--设置页面描述与关键字,封面图片-->
 
-    <meta name="description" content="之前有一篇文章通过在使用RocketMQ消息追踪功能遇到的问题及解决方法，与此同时简单看了下RocketMQ的源码，重点在问题解决上。在查问题过程中发现很少有文章来描述此功能从头到尾是如何实现的，然后我就研究了下，通过这篇文章来讲解一下。" />
-    <meta name="keywords" content="" />
-    <title>【源码分析】RocketMQ消息追踪源码详解</title>
-    
-    <style>
-        #content #title {
-            background-image: url('/background.jpg');
-        }
-    </style>
-    
 
-</head>
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
 <body>
-    <div id="app" v-cloak>
-    <div id="content">
-        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
-<el-dialog :visible.sync="visible"  title="前往">
-    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
-    <div id="searchResult"></div>
+  
 
-    <br>
-    <div id="Menu">
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="【源码分析】RocketMQ消息追踪源码详解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-04-29 20:07" pubdate>
+          2021年4月29日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          75 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
     </div>
 
-</el-dialog>
-
-<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
-
-
-
-        
-        <div id="title">
-            <h1>
-                【源码分析】RocketMQ消息追踪源码详解<br>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">【源码分析】RocketMQ消息追踪源码详解</h1>
+            
+            
+              <div class="markdown-body">
                 
-                <p>作者：wz<br>编写：2021-04-29</p>
-            </h1>
-        </div>
-        
-
-        <div id="article">
-            <meta name="referrer" content="no-referrer">
+                <meta name="referrer" content="no-referrer" />
 
 <p>消息追踪有生产者发送消息追踪和消费者消费消息追踪，因为他们原理差不多，并且容易出现问题的地方主要集中在消费者消息追踪，所以这篇文章主要去讲一下消费者的消息追踪，而消费者又分为PullConsumer和PushConsumer，在消息追踪这块基本是一样的，所以最终选择的是PushConsumer的消费消息的消息追踪</p>
 <h3 id="消息追踪服务的初始化"><a href="#消息追踪服务的初始化" class="headerlink" title="消息追踪服务的初始化"></a>消息追踪服务的初始化</h3><p>消息追踪的初始化是随着消费者初始化进行初始化的，见下面的代码分析</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">DefaultMQPushConsumer.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">DefaultMQPushConsumer</span><span class="params">(<span class="keyword">final</span> String namespace, <span class="keyword">final</span> String consumerGroup, RPCHook rpcHook,</span></span></span><br><span class="line"><span class="function"><span class="params">        AllocateMessageQueueStrategy allocateMessageQueueStrategy, <span class="keyword">boolean</span> enableMsgTrace, <span class="keyword">final</span> String customizedTraceTopic)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.consumerGroup = consumerGroup;</span><br><span class="line">        <span class="keyword">this</span>.namespace = namespace;</span><br><span class="line">        <span class="keyword">this</span>.allocateMessageQueueStrategy = allocateMessageQueueStrategy;</span><br><span class="line">        defaultMQPushConsumerImpl = <span class="keyword">new</span> DefaultMQPushConsumerImpl(<span class="keyword">this</span>, rpcHook);</span><br><span class="line">        <span class="keyword">if</span> (enableMsgTrace) &#123;<span class="comment">// 是否开启消息追踪的标志</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                AsyncTraceDispatcher dispatcher = <span class="keyword">new</span> AsyncTraceDispatcher(consumerGroup, TraceDispatcher.Type.CONSUME, customizedTraceTopic, rpcHook);<span class="comment">// 行1.初始化异步Dispatcher</span></span><br><span class="line">                dispatcher.setHostConsumer(<span class="keyword">this</span>.getDefaultMQPushConsumerImpl());</span><br><span class="line">                traceDispatcher = dispatcher;<span class="comment">// 行2.把这个dispatcher记录到当前消费者下面的traceDispatcher这里需要记住</span></span><br><span class="line">                <span class="keyword">this</span>.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(</span><br><span class="line">                    <span class="keyword">new</span> ConsumeMessageTraceHookImpl(traceDispatcher));<span class="comment">// 行3.并且给当前的consumer注册了一个钩子</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                log.error(<span class="string">"system mqtrace hook init failed ,maybe can't send msg trace data"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs Java">DefaultMQPushConsumer.java<br><span class="hljs-keyword">public</span> <span class="hljs-title function_">DefaultMQPushConsumer</span><span class="hljs-params">(<span class="hljs-keyword">final</span> String namespace, <span class="hljs-keyword">final</span> String consumerGroup, RPCHook rpcHook,</span><br><span class="hljs-params">        AllocateMessageQueueStrategy allocateMessageQueueStrategy, <span class="hljs-type">boolean</span> enableMsgTrace, <span class="hljs-keyword">final</span> String customizedTraceTopic)</span> &#123;<br>        <span class="hljs-built_in">this</span>.consumerGroup = consumerGroup;<br>        <span class="hljs-built_in">this</span>.namespace = namespace;<br>        <span class="hljs-built_in">this</span>.allocateMessageQueueStrategy = allocateMessageQueueStrategy;<br>        defaultMQPushConsumerImpl = <span class="hljs-keyword">new</span> <span class="hljs-title class_">DefaultMQPushConsumerImpl</span>(<span class="hljs-built_in">this</span>, rpcHook);<br>        <span class="hljs-keyword">if</span> (enableMsgTrace) &#123;<span class="hljs-comment">// 是否开启消息追踪的标志</span><br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-type">AsyncTraceDispatcher</span> <span class="hljs-variable">dispatcher</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AsyncTraceDispatcher</span>(consumerGroup, TraceDispatcher.Type.CONSUME, customizedTraceTopic, rpcHook);<span class="hljs-comment">// 行1.初始化异步Dispatcher</span><br>                dispatcher.setHostConsumer(<span class="hljs-built_in">this</span>.getDefaultMQPushConsumerImpl());<br>                traceDispatcher = dispatcher;<span class="hljs-comment">// 行2.把这个dispatcher记录到当前消费者下面的traceDispatcher这里需要记住</span><br>                <span class="hljs-built_in">this</span>.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(<br>                    <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConsumeMessageTraceHookImpl</span>(traceDispatcher));<span class="hljs-comment">// 行3.并且给当前的consumer注册了一个钩子</span><br>            &#125; <span class="hljs-keyword">catch</span> (Throwable e) &#123;<br>                log.error(<span class="hljs-string">&quot;system mqtrace hook init failed ,maybe can&#x27;t send msg trace data&quot;</span>);<br>            &#125;<br>        &#125;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
 <p>先分析<strong>行1</strong>：这里初始化了一个Dispatcher，我们来看一下这里是怎么进行初始化的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">AsyncTraceDispatcher</span><span class="params">(String group, Type type,String traceTopicName, RPCHook rpcHook)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// queueSize is greater than or equal to the n power of 2 of value</span></span><br><span class="line">        <span class="keyword">this</span>.queueSize = <span class="number">2048</span>;</span><br><span class="line">        <span class="keyword">this</span>.batchSize = <span class="number">100</span>;</span><br><span class="line">        <span class="keyword">this</span>.maxMsgSize = <span class="number">128000</span>;</span><br><span class="line">        <span class="keyword">this</span>.discardCount = <span class="keyword">new</span> AtomicLong(<span class="number">0L</span>);</span><br><span class="line">        <span class="keyword">this</span>.traceContextQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;TraceContext&gt;(<span class="number">1024</span>);</span><br><span class="line">        <span class="keyword">this</span>.group = group;</span><br><span class="line">        <span class="keyword">this</span>.type = type;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.appenderQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;Runnable&gt;(queueSize);<span class="comment">// 这个队列很重要要记住这个Dispatcher是有一个队列的这个队列里存的都是Runnable</span></span><br><span class="line">        <span class="keyword">if</span> (!UtilAll.isBlank(traceTopicName)) &#123;</span><br><span class="line">            <span class="keyword">this</span>.traceTopicName = traceTopicName;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.traceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.traceExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="comment">//</span></span><br><span class="line">            <span class="number">10</span>, <span class="comment">//</span></span><br><span class="line">            <span class="number">20</span>, <span class="comment">//</span></span><br><span class="line">            <span class="number">1000</span> * <span class="number">60</span>, <span class="comment">//</span></span><br><span class="line">            TimeUnit.MILLISECONDS, <span class="comment">//</span></span><br><span class="line">            <span class="keyword">this</span>.appenderQueue, <span class="comment">//</span></span><br><span class="line">            <span class="keyword">new</span> ThreadFactoryImpl(<span class="string">"MQTraceSendThread_"</span>));<span class="comment">// 初始化一个线程池</span></span><br><span class="line">        traceProducer = getAndCreateTraceProducer(rpcHook);<span class="comment">// 创建了一个生产者用于发送消息追踪相关消息</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs Java">AsyncTraceDispatcher.java<br><span class="hljs-keyword">public</span> <span class="hljs-title function_">AsyncTraceDispatcher</span><span class="hljs-params">(String group, Type type,String traceTopicName, RPCHook rpcHook)</span> &#123;<br>        <span class="hljs-comment">// queueSize is greater than or equal to the n power of 2 of value</span><br>        <span class="hljs-built_in">this</span>.queueSize = <span class="hljs-number">2048</span>;<br>        <span class="hljs-built_in">this</span>.batchSize = <span class="hljs-number">100</span>;<br>        <span class="hljs-built_in">this</span>.maxMsgSize = <span class="hljs-number">128000</span>;<br>        <span class="hljs-built_in">this</span>.discardCount = <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicLong</span>(<span class="hljs-number">0L</span>);<br>        <span class="hljs-built_in">this</span>.traceContextQueue = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBlockingQueue</span>&lt;TraceContext&gt;(<span class="hljs-number">1024</span>);<br>        <span class="hljs-built_in">this</span>.group = group;<br>        <span class="hljs-built_in">this</span>.type = type;<br><br>        <span class="hljs-built_in">this</span>.appenderQueue = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayBlockingQueue</span>&lt;Runnable&gt;(queueSize);<span class="hljs-comment">// 这个队列很重要要记住这个Dispatcher是有一个队列的这个队列里存的都是Runnable</span><br>        <span class="hljs-keyword">if</span> (!UtilAll.isBlank(traceTopicName)) &#123;<br>            <span class="hljs-built_in">this</span>.traceTopicName = traceTopicName;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-built_in">this</span>.traceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;<br>        &#125;<br>        <span class="hljs-built_in">this</span>.traceExecutor = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ThreadPoolExecutor</span>(<span class="hljs-comment">//</span><br>            <span class="hljs-number">10</span>, <span class="hljs-comment">//</span><br>            <span class="hljs-number">20</span>, <span class="hljs-comment">//</span><br>            <span class="hljs-number">1000</span> * <span class="hljs-number">60</span>, <span class="hljs-comment">//</span><br>            TimeUnit.MILLISECONDS, <span class="hljs-comment">//</span><br>            <span class="hljs-built_in">this</span>.appenderQueue, <span class="hljs-comment">//</span><br>            <span class="hljs-keyword">new</span> <span class="hljs-title class_">ThreadFactoryImpl</span>(<span class="hljs-string">&quot;MQTraceSendThread_&quot;</span>));<span class="hljs-comment">// 初始化一个线程池</span><br>        traceProducer = getAndCreateTraceProducer(rpcHook);<span class="hljs-comment">// 创建了一个生产者用于发送消息追踪相关消息</span><br>    &#125;<br></code></pre></td></tr></table></figure>
+
 <p>上面就初始化好了一个AsyncTraceDispatcher，然后<strong>行2</strong>把这个dispatcher给保存到了当前消费者。</p>
 <p>下面看一下<strong>行3</strong>中的这个Hook是个什么</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">ConsumeMessageTraceHookImpl.java</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConsumeMessageTraceHookImpl</span> <span class="keyword">implements</span> <span class="title">ConsumeMessageHook</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">ConsumeMessageTraceHookImpl</span><span class="params">(TraceDispatcher localDispatcher)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.localDispatcher = localDispatcher;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//先看下ConsumeMessageHook这个接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConsumeMessageHook</span> </span>&#123;</span><br><span class="line">    <span class="function">String <span class="title">hookName</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">consumeMessageBefore</span><span class="params">(<span class="keyword">final</span> ConsumeMessageContext context)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">consumeMessageAfter</span><span class="params">(<span class="keyword">final</span> ConsumeMessageContext context)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs Java">ConsumeMessageTraceHookImpl.java<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ConsumeMessageTraceHookImpl</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">ConsumeMessageHook</span> &#123;<br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">ConsumeMessageTraceHookImpl</span><span class="hljs-params">(TraceDispatcher localDispatcher)</span> &#123;<br>        <span class="hljs-built_in">this</span>.localDispatcher = localDispatcher;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">//先看下ConsumeMessageHook这个接口</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ConsumeMessageHook</span> &#123;<br>    String <span class="hljs-title function_">hookName</span><span class="hljs-params">()</span>;<br><br>    <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumeMessageBefore</span><span class="hljs-params">(<span class="hljs-keyword">final</span> ConsumeMessageContext context)</span>;<br><br>    <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumeMessageAfter</span><span class="hljs-params">(<span class="hljs-keyword">final</span> ConsumeMessageContext context)</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>有个consumeMessageBefore和consumeMessageAfter，这名字起的还是很形象的，大致猜出他们是消息消费前消费后会去调用这两个方法。</p>
 <p>初始化这里先知道这些就可以了，总结来说记住如下三点就可以了：</p>
 <ol>
@@ -93,11 +299,14 @@
 <li>ConsumeMessageTraceHookImpl有两个方法发消息前和发消息后会调用，并且也保存了上面的Dispatcher</li>
 </ol>
 <h3 id="消息追踪服务的启动"><a href="#消息追踪服务的启动" class="headerlink" title="消息追踪服务的启动"></a>消息追踪服务的启动</h3><p>当消费者初始化完毕后会调用其自己的start()方法进行消费者的启动，代码如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">DefaultMQPushConsumer.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> MQClientException </span>&#123;</span><br><span class="line">        setConsumerGroup(NamespaceUtil.wrapNamespace(<span class="keyword">this</span>.getNamespace(), <span class="keyword">this</span>.consumerGroup));</span><br><span class="line">        <span class="keyword">this</span>.defaultMQPushConsumerImpl.start();<span class="comment">//行1.消费者启动，本文咱不细看，就知道启动了就可以</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> != traceDispatcher) &#123;<span class="comment">//通过判断是否有dispatcher来决定是否启动消息追踪，初始化那里我们知道这里是被保存了的</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                traceDispatcher.start(<span class="keyword">this</span>.getNamesrvAddr(), <span class="keyword">this</span>.getAccessChannel());<span class="comment">//行2.这里开始启动这个Dispatcher（调度器）</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (MQClientException e) &#123;</span><br><span class="line">                log.warn(<span class="string">"trace dispatcher start failed "</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs Java">DefaultMQPushConsumer.java<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">start</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> MQClientException &#123;<br>        setConsumerGroup(NamespaceUtil.wrapNamespace(<span class="hljs-built_in">this</span>.getNamespace(), <span class="hljs-built_in">this</span>.consumerGroup));<br>        <span class="hljs-built_in">this</span>.defaultMQPushConsumerImpl.start();<span class="hljs-comment">//行1.消费者启动，本文咱不细看，就知道启动了就可以</span><br>        <span class="hljs-keyword">if</span> (<span class="hljs-literal">null</span> != traceDispatcher) &#123;<span class="hljs-comment">//通过判断是否有dispatcher来决定是否启动消息追踪，初始化那里我们知道这里是被保存了的</span><br>            <span class="hljs-keyword">try</span> &#123;<br>                traceDispatcher.start(<span class="hljs-built_in">this</span>.getNamesrvAddr(), <span class="hljs-built_in">this</span>.getAccessChannel());<span class="hljs-comment">//行2.这里开始启动这个Dispatcher（调度器）</span><br>            &#125; <span class="hljs-keyword">catch</span> (MQClientException e) &#123;<br>                log.warn(<span class="hljs-string">&quot;trace dispatcher start failed &quot;</span>, e);<br>            &#125;<br>        &#125;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
 <p>来看下<strong>行2</strong>Dispatcher是怎么启动的</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">(String nameSrvAddr, AccessChannel accessChannel)</span> <span class="keyword">throws</span> MQClientException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (isStarted.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">            traceProducer.setNamesrvAddr(nameSrvAddr);</span><br><span class="line">            traceProducer.setInstanceName(TRACE_INSTANCE_NAME + <span class="string">"_"</span> + nameSrvAddr);</span><br><span class="line">            traceProducer.start();</span><br><span class="line">        &#125;<span class="comment">//行2.1.启动一个消息追踪的生产者</span></span><br><span class="line">        <span class="keyword">this</span>.accessChannel = accessChannel;</span><br><span class="line">        <span class="keyword">this</span>.worker = <span class="keyword">new</span> Thread(<span class="keyword">new</span> AsyncRunnable(), <span class="string">"MQ-AsyncTraceDispatcher-Thread-"</span> + dispatcherId);<span class="comment">//行2.2 开启了一个守护进程去运行AsyncRunnable</span></span><br><span class="line">        <span class="keyword">this</span>.worker.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">this</span>.worker.start();</span><br><span class="line">        <span class="keyword">this</span>.registerShutDownHook();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs Java">AsyncTraceDispatcher.java<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">start</span><span class="hljs-params">(String nameSrvAddr, AccessChannel accessChannel)</span> <span class="hljs-keyword">throws</span> MQClientException &#123;<br>        <span class="hljs-keyword">if</span> (isStarted.compareAndSet(<span class="hljs-literal">false</span>, <span class="hljs-literal">true</span>)) &#123;<br>            traceProducer.setNamesrvAddr(nameSrvAddr);<br>            traceProducer.setInstanceName(TRACE_INSTANCE_NAME + <span class="hljs-string">&quot;_&quot;</span> + nameSrvAddr);<br>            traceProducer.start();<br>        &#125;<span class="hljs-comment">//行2.1.启动一个消息追踪的生产者</span><br>        <span class="hljs-built_in">this</span>.accessChannel = accessChannel;<br>        <span class="hljs-built_in">this</span>.worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">AsyncRunnable</span>(), <span class="hljs-string">&quot;MQ-AsyncTraceDispatcher-Thread-&quot;</span> + dispatcherId);<span class="hljs-comment">//行2.2 开启了一个守护进程去运行AsyncRunnable</span><br>        <span class="hljs-built_in">this</span>.worker.setDaemon(<span class="hljs-literal">true</span>);<br>        <span class="hljs-built_in">this</span>.worker.start();<br>        <span class="hljs-built_in">this</span>.registerShutDownHook();<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>在行2.2我们看到有一个AsyncRunnable，看下这个类的run方法是啥</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> stopped;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (!stopped) &#123;</span><br><span class="line">      List&lt;TraceContext&gt; contexts = <span class="keyword">new</span> ArrayList&lt;TraceContext&gt;(batchSize);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; batchSize; i++) &#123;</span><br><span class="line">        TraceContext context = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="comment">//get trace data element from blocking Queue — traceContextQueue</span></span><br><span class="line">          context = traceContextQueue.poll(<span class="number">5</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (context != <span class="keyword">null</span>) &#123;</span><br><span class="line">          contexts.add(context);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (contexts.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        AsyncAppenderRequest request = <span class="keyword">new</span> AsyncAppenderRequest(contexts);</span><br><span class="line">        traceExecutor.submit(request);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (AsyncTraceDispatcher.<span class="keyword">this</span>.stopped) &#123;</span><br><span class="line">        <span class="keyword">this</span>.stopped = <span class="keyword">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs Java">AsyncTraceDispatcher.java<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">AsyncRunnable</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Runnable</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> stopped;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">run</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">while</span> (!stopped) &#123;<br>      List&lt;TraceContext&gt; contexts = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;TraceContext&gt;(batchSize);<br>      <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; batchSize; i++) &#123;<br>        <span class="hljs-type">TraceContext</span> <span class="hljs-variable">context</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>        <span class="hljs-keyword">try</span> &#123;<br>          <span class="hljs-comment">//get trace data element from blocking Queue — traceContextQueue</span><br>          context = traceContextQueue.poll(<span class="hljs-number">5</span>, TimeUnit.MILLISECONDS);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (context != <span class="hljs-literal">null</span>) &#123;<br>          contexts.add(context);<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>          <span class="hljs-keyword">break</span>;<br>        &#125;<br>      &#125;<br>      <span class="hljs-keyword">if</span> (contexts.size() &gt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-type">AsyncAppenderRequest</span> <span class="hljs-variable">request</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AsyncAppenderRequest</span>(contexts);<br>        traceExecutor.submit(request);<br>      &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (AsyncTraceDispatcher.<span class="hljs-built_in">this</span>.stopped) &#123;<br>        <span class="hljs-built_in">this</span>.stopped = <span class="hljs-literal">true</span>;<br>      &#125;<br>    &#125;<br><br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>在这里看到了一个熟悉的traceContextQueue，这也是初始化的时候我说需要记下来的，就是从这里面每5毫秒取出context然后包装成AsyncAppenderRequest，再扔到初始化的时候初始化的线程池。</p>
 <p>小结：当消费者启动的时候顺带开了一个守护进程，这个守护进程会一直去遍历一个队列从中取出context去跑。然后此时还剩下两个问题没有解决</p>
 <ol>
@@ -106,83 +315,366 @@
 </ol>
 <h3 id="消息追踪服务的实现"><a href="#消息追踪服务的实现" class="headerlink" title="消息追踪服务的实现"></a>消息追踪服务的实现</h3><p>在上一节我们发现了两个问题，让我们一个一个来解决</p>
 <p>####traceContextQueue是如何添加的数据</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvr98d2j31h608278g.jpg" alt="image-20210429214846621"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">AsyncTraceDispatcher.java</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">append</span><span class="params">(<span class="keyword">final</span> Object ctx)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">boolean</span> result = traceContextQueue.offer((TraceContext) ctx);</span><br><span class="line">  <span class="keyword">if</span> (!result) &#123;</span><br><span class="line">    log.info(<span class="string">"buffer full"</span> + discardCount.incrementAndGet() + <span class="string">" ,context is "</span> + ctx);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvr98d2j31h608278g.jpg" srcset="/img/loading.gif" lazyload alt="image-20210429214846621"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Java">AsyncTraceDispatcher.java<br><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">append</span><span class="hljs-params">(<span class="hljs-keyword">final</span> Object ctx)</span> &#123;<br>  <span class="hljs-type">boolean</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> traceContextQueue.offer((TraceContext) ctx);<br>  <span class="hljs-keyword">if</span> (!result) &#123;<br>    log.info(<span class="hljs-string">&quot;buffer full&quot;</span> + discardCount.incrementAndGet() + <span class="hljs-string">&quot; ,context is &quot;</span> + ctx);<br>  &#125;<br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>AsyncTraceDispatcher有一个append方法会一直向队列中加入context，那这个append是谁调的呢</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvxn6ucj313w09swhi.jpg" alt="image-20210429215324246"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consumeMessageBefore</span><span class="params">(ConsumeMessageContext context)</span> </span>&#123;</span><br><span class="line">  ...<span class="comment">//省略代码</span></span><br><span class="line">    <span class="keyword">if</span> (beans.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      traceContext.setTraceBeans(beans);</span><br><span class="line">      traceContext.setTimeStamp(System.currentTimeMillis());</span><br><span class="line">      localDispatcher.append(traceContext);<span class="comment">//这里调的</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consumeMessageAfter</span><span class="params">(ConsumeMessageContext context)</span> </span>&#123;</span><br><span class="line">...<span class="comment">//省略代码</span></span><br><span class="line">  localDispatcher.append(subAfterContext);<span class="comment">//这里调的</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gq0yvxn6ucj313w09swhi.jpg" srcset="/img/loading.gif" lazyload alt="image-20210429215324246"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumeMessageBefore</span><span class="hljs-params">(ConsumeMessageContext context)</span> &#123;<br>  ...<span class="hljs-comment">//省略代码</span><br>    <span class="hljs-keyword">if</span> (beans.size() &gt; <span class="hljs-number">0</span>) &#123;<br>      traceContext.setTraceBeans(beans);<br>      traceContext.setTimeStamp(System.currentTimeMillis());<br>      localDispatcher.append(traceContext);<span class="hljs-comment">//这里调的</span><br>    &#125;<br>&#125;<br><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumeMessageAfter</span><span class="hljs-params">(ConsumeMessageContext context)</span> &#123;<br>...<span class="hljs-comment">//省略代码</span><br>  localDispatcher.append(subAfterContext);<span class="hljs-comment">//这里调的</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>清晰了，原来是消费前消费后都会把context加入到队列中</p>
 <p>第二个问题AsyncAppenderRequest是怎么运行的</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncAppenderRequest</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  List&lt;TraceContext&gt; contextList;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">AsyncAppenderRequest</span><span class="params">(<span class="keyword">final</span> List&lt;TraceContext&gt; contextList)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (contextList != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">this</span>.contextList = contextList;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">this</span>.contextList = <span class="keyword">new</span> ArrayList&lt;TraceContext&gt;(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    sendTraceData(contextList);<span class="comment">// 终于看到了发消息的地方</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AsyncAppenderRequest</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Runnable</span> &#123;<br>  List&lt;TraceContext&gt; contextList;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">AsyncAppenderRequest</span><span class="hljs-params">(<span class="hljs-keyword">final</span> List&lt;TraceContext&gt; contextList)</span> &#123;<br>    <span class="hljs-keyword">if</span> (contextList != <span class="hljs-literal">null</span>) &#123;<br>      <span class="hljs-built_in">this</span>.contextList = contextList;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>      <span class="hljs-built_in">this</span>.contextList = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;TraceContext&gt;(<span class="hljs-number">1</span>);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">run</span><span class="hljs-params">()</span> &#123;<br>    sendTraceData(contextList);<span class="hljs-comment">// 终于看到了发消息的地方</span><br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>如上代码所示，这个AsyncAppenderRequest就是来发送消息追踪的消息的。</p>
 <p>小结：当消费者发送消息的时候会把要发送消息的context加入到队列中，然后让守护进程去发消息追踪的消息，发消息的代码在下面</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendTraceData</span><span class="params">(List&lt;TraceContext&gt; contextList)</span> </span>&#123;</span><br><span class="line">  Map&lt;String, List&lt;TraceTransferBean&gt;&gt; transBeanMap = <span class="keyword">new</span> HashMap&lt;String, List&lt;TraceTransferBean&gt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (TraceContext context : contextList) &#123;</span><br><span class="line">    <span class="keyword">if</span> (context.getTraceBeans().isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Topic value corresponding to original message entity content</span></span><br><span class="line">    String topic = context.getTraceBeans().get(<span class="number">0</span>).getTopic();</span><br><span class="line">    String regionId = context.getRegionId();</span><br><span class="line">    <span class="comment">// Use  original message entity's topic as key</span></span><br><span class="line">    String key = topic;</span><br><span class="line">    <span class="keyword">if</span> (!StringUtils.isBlank(regionId)) &#123;</span><br><span class="line">      key = key + TraceConstants.CONTENT_SPLITOR + regionId;</span><br><span class="line">    &#125;</span><br><span class="line">    List&lt;TraceTransferBean&gt; transBeanList = transBeanMap.get(key);</span><br><span class="line">    <span class="keyword">if</span> (transBeanList == <span class="keyword">null</span>) &#123;</span><br><span class="line">      transBeanList = <span class="keyword">new</span> ArrayList&lt;TraceTransferBean&gt;();</span><br><span class="line">      transBeanMap.put(key, transBeanList);</span><br><span class="line">    &#125;</span><br><span class="line">    TraceTransferBean traceData = TraceDataEncoder.encoderFromContextBean(context);</span><br><span class="line">    transBeanList.add(traceData);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (Map.Entry&lt;String, List&lt;TraceTransferBean&gt;&gt; entry : transBeanMap.entrySet()) &#123;</span><br><span class="line">    String[] key = entry.getKey().split(String.valueOf(TraceConstants.CONTENT_SPLITOR));</span><br><span class="line">    String dataTopic = entry.getKey();</span><br><span class="line">    String regionId = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (key.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">      dataTopic = key[<span class="number">0</span>];</span><br><span class="line">      regionId = key[<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    flushData(entry.getValue(), dataTopic, regionId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">sendTraceData</span><span class="hljs-params">(List&lt;TraceContext&gt; contextList)</span> &#123;<br>  Map&lt;String, List&lt;TraceTransferBean&gt;&gt; transBeanMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;String, List&lt;TraceTransferBean&gt;&gt;();<br>  <span class="hljs-keyword">for</span> (TraceContext context : contextList) &#123;<br>    <span class="hljs-keyword">if</span> (context.getTraceBeans().isEmpty()) &#123;<br>      <span class="hljs-keyword">continue</span>;<br>    &#125;<br>    <span class="hljs-comment">// Topic value corresponding to original message entity content</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">topic</span> <span class="hljs-operator">=</span> context.getTraceBeans().get(<span class="hljs-number">0</span>).getTopic();<br>    <span class="hljs-type">String</span> <span class="hljs-variable">regionId</span> <span class="hljs-operator">=</span> context.getRegionId();<br>    <span class="hljs-comment">// Use  original message entity&#x27;s topic as key</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">key</span> <span class="hljs-operator">=</span> topic;<br>    <span class="hljs-keyword">if</span> (!StringUtils.isBlank(regionId)) &#123;<br>      key = key + TraceConstants.CONTENT_SPLITOR + regionId;<br>    &#125;<br>    List&lt;TraceTransferBean&gt; transBeanList = transBeanMap.get(key);<br>    <span class="hljs-keyword">if</span> (transBeanList == <span class="hljs-literal">null</span>) &#123;<br>      transBeanList = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;TraceTransferBean&gt;();<br>      transBeanMap.put(key, transBeanList);<br>    &#125;<br>    <span class="hljs-type">TraceTransferBean</span> <span class="hljs-variable">traceData</span> <span class="hljs-operator">=</span> TraceDataEncoder.encoderFromContextBean(context);<br>    transBeanList.add(traceData);<br>  &#125;<br>  <span class="hljs-keyword">for</span> (Map.Entry&lt;String, List&lt;TraceTransferBean&gt;&gt; entry : transBeanMap.entrySet()) &#123;<br>    String[] key = entry.getKey().split(String.valueOf(TraceConstants.CONTENT_SPLITOR));<br>    <span class="hljs-type">String</span> <span class="hljs-variable">dataTopic</span> <span class="hljs-operator">=</span> entry.getKey();<br>    <span class="hljs-type">String</span> <span class="hljs-variable">regionId</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>    <span class="hljs-keyword">if</span> (key.length &gt; <span class="hljs-number">1</span>) &#123;<br>      dataTopic = key[<span class="hljs-number">0</span>];<br>      regionId = key[<span class="hljs-number">1</span>];<br>    &#125;<br>    flushData(entry.getValue(), dataTopic, regionId);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>这里的代码就不详细讲解了可以看一下发送消息的Message是什么样的</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Message&#123;topic='rmq_sys_TRACE_DATA_cn-qingdao-publictest', flag=0, properties=&#123;KEYS=7F00000100077CD62F4389D8FA370048, WAIT=true&#125;, body=[83, 117, 98, 66, 101, 102, 111, 114, 101, 1, 49, 54, 49, 57, 53, 49, 57, 48, 57, 57, 48, 57, 54, 1, 99, 110, 45, 113, 105, 110, 103, 100, 97, 111, 45, 112, 117, 98, 108, 105, 99, 116, 101, 115, 116, 1, 71, 73, 68, 95, 115, 116, 105, 99, 107, 101, 114, 1, 55, 70, 48, 48, 48, 48, 48, 49, 50, 52, 55, 65, 51, 66, 49, 57, 50, 68, 51, 50, 56, 57, 68, 56, 70, 67, 68, 56, 48, 48, 50, 48, 1, 55, 70, 48, 48, 48, 48, 48, 49, 48, 48, 48, 55, 55, 67, 68, 54, 50, 70, 52, 51, 56, 57, 68, 56, 70, 65, 51, 55, 48, 48, 52, 56, 1, 48, 1, 110, 117, 108, 108, 1, 49, 57, 50, 46, 49, 54, 56, 46, 51, 49, 46, 53, 52, 64, 57, 51, 51, 56, 2], transactionId='null'&#125;</span><br><span class="line">body解码后是这样：</span><br><span class="line">SubBefore1619519099096cn-qingdao-publictest消费者组7F000001247A3B192D3289D8FCD800207F00000100077CD62F4389D8FA3700480nullip@9338</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Json">Message<span class="hljs-punctuation">&#123;</span>topic=&#x27;rmq_sys_TRACE_DATA_cn-qingdao-publictest&#x27;<span class="hljs-punctuation">,</span> flag=<span class="hljs-number">0</span><span class="hljs-punctuation">,</span> properties=<span class="hljs-punctuation">&#123;</span>KEYS=<span class="hljs-number">7</span>F00000100077CD62F4389D8FA370048<span class="hljs-punctuation">,</span> WAIT=<span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span> body=<span class="hljs-punctuation">[</span><span class="hljs-number">83</span><span class="hljs-punctuation">,</span> <span class="hljs-number">117</span><span class="hljs-punctuation">,</span> <span class="hljs-number">98</span><span class="hljs-punctuation">,</span> <span class="hljs-number">66</span><span class="hljs-punctuation">,</span> <span class="hljs-number">101</span><span class="hljs-punctuation">,</span> <span class="hljs-number">102</span><span class="hljs-punctuation">,</span> <span class="hljs-number">111</span><span class="hljs-punctuation">,</span> <span class="hljs-number">114</span><span class="hljs-punctuation">,</span> <span class="hljs-number">101</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">54</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">53</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">54</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">99</span><span class="hljs-punctuation">,</span> <span class="hljs-number">110</span><span class="hljs-punctuation">,</span> <span class="hljs-number">45</span><span class="hljs-punctuation">,</span> <span class="hljs-number">113</span><span class="hljs-punctuation">,</span> <span class="hljs-number">105</span><span class="hljs-punctuation">,</span> <span class="hljs-number">110</span><span class="hljs-punctuation">,</span> <span class="hljs-number">103</span><span class="hljs-punctuation">,</span> <span class="hljs-number">100</span><span class="hljs-punctuation">,</span> <span class="hljs-number">97</span><span class="hljs-punctuation">,</span> <span class="hljs-number">111</span><span class="hljs-punctuation">,</span> <span class="hljs-number">45</span><span class="hljs-punctuation">,</span> <span class="hljs-number">112</span><span class="hljs-punctuation">,</span> <span class="hljs-number">117</span><span class="hljs-punctuation">,</span> <span class="hljs-number">98</span><span class="hljs-punctuation">,</span> <span class="hljs-number">108</span><span class="hljs-punctuation">,</span> <span class="hljs-number">105</span><span class="hljs-punctuation">,</span> <span class="hljs-number">99</span><span class="hljs-punctuation">,</span> <span class="hljs-number">116</span><span class="hljs-punctuation">,</span> <span class="hljs-number">101</span><span class="hljs-punctuation">,</span> <span class="hljs-number">115</span><span class="hljs-punctuation">,</span> <span class="hljs-number">116</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">71</span><span class="hljs-punctuation">,</span> <span class="hljs-number">73</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">95</span><span class="hljs-punctuation">,</span> <span class="hljs-number">115</span><span class="hljs-punctuation">,</span> <span class="hljs-number">116</span><span class="hljs-punctuation">,</span> <span class="hljs-number">105</span><span class="hljs-punctuation">,</span> <span class="hljs-number">99</span><span class="hljs-punctuation">,</span> <span class="hljs-number">107</span><span class="hljs-punctuation">,</span> <span class="hljs-number">101</span><span class="hljs-punctuation">,</span> <span class="hljs-number">114</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">70</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">52</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">65</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">66</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">70</span><span class="hljs-punctuation">,</span> <span class="hljs-number">67</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">70</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">67</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">54</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">70</span><span class="hljs-punctuation">,</span> <span class="hljs-number">52</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">68</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">70</span><span class="hljs-punctuation">,</span> <span class="hljs-number">65</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">55</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">52</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">48</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">110</span><span class="hljs-punctuation">,</span> <span class="hljs-number">117</span><span class="hljs-punctuation">,</span> <span class="hljs-number">108</span><span class="hljs-punctuation">,</span> <span class="hljs-number">108</span><span class="hljs-punctuation">,</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">50</span><span class="hljs-punctuation">,</span> <span class="hljs-number">46</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">54</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">46</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span> <span class="hljs-number">46</span><span class="hljs-punctuation">,</span> <span class="hljs-number">53</span><span class="hljs-punctuation">,</span> <span class="hljs-number">52</span><span class="hljs-punctuation">,</span> <span class="hljs-number">64</span><span class="hljs-punctuation">,</span> <span class="hljs-number">57</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">51</span><span class="hljs-punctuation">,</span> <span class="hljs-number">56</span><span class="hljs-punctuation">,</span> <span class="hljs-number">2</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span> transactionId=&#x27;<span class="hljs-literal"><span class="hljs-keyword">null</span></span>&#x27;<span class="hljs-punctuation">&#125;</span><br>body解码后是这样：<br>SubBefore<span class="hljs-number">1619519099096</span>cn-qingdao-publictest消费者组<span class="hljs-number">7</span>F000001247A3B192D3289D8FCD80020<span class="hljs-number">7</span>F00000100077CD62F4389D8FA370048<span class="hljs-number">0</span><span class="hljs-literal"><span class="hljs-keyword">null</span></span>ip@<span class="hljs-number">9338</span><br></code></pre></td></tr></table></figure>
+
+
+
 <p>总结：本文从消息追踪功能的初始化，启动，和实现仨个方面进行了讲解了一下消息追踪是怎么跑起来的，为了方便对整体有个认知，这里有些细节没有去讲，去了解和认识RocketMQ还是很有好处的。</p>
-   
-            <br>
-            <hr><br>
-            
-                <div id="article-previous">
-                    <a href="/2021/05/17/谈谈Redis分布式锁/" data-toggle="tooltip" data-placement="top" title="谈谈Redis分布式锁">&larr; 上一篇</a>
-                </div>
-                
-                
-                <div id="article-next">
-                    <a href="/2021/03/14/Java泛型详解（对比Kotlin）/" data-toggle="tooltip" data-placement="top" title="Java泛型详解（对比Kotlin）">下一篇 &rarr;</a>
-                </div>
-            
-            <br><br>
-            <hr>
-        </div>
-    </div>
 
-    <div id="comment">
-        
-        
-    <h2>留言</h2>
-    <div id="vcomments">
-    </div>
-    <script>
-        var valine = new Valine({
-        el: '#vcomments', 
-        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
-        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
-    
-        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
-        emojiMaps: {
-          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
-          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
-          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
-          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
-          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
-          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
-          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
-          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
-          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
-          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
-          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
-          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
-          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
-          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
-          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
-          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
-          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
-          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
-          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
-          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
-          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
-        }
-    })
-    </script>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
 
+<span class="category-chains">
+  
+  
     
+      <span class="category-chain">
+        
+  <a href="/categories/RocketMQ/" class="category-chain-item">RocketMQ</a>
+  
+  
+
+      </span>
     
-    
-     
+  
+</span>
+
     </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%BA%90%E7%A0%81/">#源码</a>
+      
+        <a href="/tags/RocketMQ/">#RocketMQ</a>
+      
+        <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/">#中间件</a>
+      
+    </div>
+  
 </div>
-    <script src="/Module/main.js"></script>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>【源码分析】RocketMQ消息追踪源码详解</div>
+      <div>http://yoursite.com/2021/04/29/【源码分析】RocketMQ消息追踪源码详解/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>wz</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年4月29日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/05/17/%E8%B0%88%E8%B0%88Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" title="谈谈Redis分布式锁">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">谈谈Redis分布式锁</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/03/14/Java%E6%B3%9B%E5%9E%8B%E8%AF%A6%E8%A7%A3%EF%BC%88%E5%AF%B9%E6%AF%94Kotlin%EF%BC%89/" title="Java泛型详解（对比Kotlin）">
+                        <span class="hidden-mobile">Java泛型详解（对比Kotlin）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

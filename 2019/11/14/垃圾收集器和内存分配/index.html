@@ -1,102 +1,311 @@
+
+
 <!DOCTYPE html>
-<html lang="cn">
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
 <head>
-    <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="判断对象是否还存活:引用计数法（未被采用，有缺陷）：每当有引用时，计数器就加一，当引用失效时，计数器就减一通过代码来证明有缺陷：可达性分析算法：通过一系列的成为GC Root的对象作为起始点，从这些节点开始向下搜索，搜索过的路径叫做引用链，当一个对象到GC Root没有任何引用链链接，就可以证明此对象是不可用的了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="垃圾收集器和内存分配">
+<meta property="og:url" content="http://yoursite.com/2019/11/14/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="判断对象是否还存活:引用计数法（未被采用，有缺陷）：每当有引用时，计数器就加一，当引用失效时，计数器就减一通过代码来证明有缺陷：可达性分析算法：通过一系列的成为GC Root的对象作为起始点，从这些节点开始向下搜索，搜索过的路径叫做引用链，当一个对象到GC Root没有任何引用链链接，就可以证明此对象是不可用的了">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g5alkikkvpj30b207yq33.jpg">
+<meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5alo7zj7yj30ya0f2wfv.jpg">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g5br4idhlsj30z90ez75j.jpg">
+<meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5fr8sn2x0j30z60euabd.jpg">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/006tNc79ly1g5ft5omtvjj30iy0573yp.jpg">
+<meta property="article:published_time" content="2019-11-14T10:51:56.000Z">
+<meta property="article:modified_time" content="2019-11-19T13:30:11.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg">
+  
+  
+  
+  <title>垃圾收集器和内存分配 - 果断的荔枝</title>
 
-<!--ＪQuery-->
-<script src="/Module/JQuery/jquery.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
-<!--Vue.js-->
-<script src="/Module/vue/vue.js"></script>
-<!--饿了么Ｕi-->
-<link rel="stylesheet" href="/Module/ElementUi/css/index.css">
-<script src="/Module/ElementUi/index.js"></script>
 
-<!--highlight-->
-<link rel="stylesheet" href="/Module/highlight/css/zenburn.css">
-<script src="/Module/highlight/highlight.min.js"></script>
 
-<!--axios-->
-<script src="/Module/axios/axios.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
 
-<!--评论-->
-<script src="/Module/comment/valine/Valine.min.js"></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
 
-<!--主题样式-->
-<link rel="stylesheet" href="/Module/style.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
-<!--设置页面描述与关键字,封面图片-->
 
-    <meta name="description" content="判断对象是否还存活:引用计数法（未被采用，有缺陷）：每当有引用时，计数器就加一，当引用失效时，计数器就减一通过代码来证明有缺陷：可达性分析算法：通过一系列的成为GC Root的对象作为起始点，从这些节点开始向下搜索，搜索过的路径叫做引用链，当一个对象到GC Root没有任何引用链链接，就可以证明此对象是不可用的了" />
-    <meta name="keywords" content="" />
-    <title>垃圾收集器和内存分配</title>
-    
-    <style>
-        #content #title {
-            background-image: url('/background.jpg');
-        }
-    </style>
-    
 
-</head>
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
 <body>
-    <div id="app" v-cloak>
-    <div id="content">
-        <el-button type="text" id="nav" icon="el-icon-tickets" @click="visible = !visible"></el-button>
-<el-dialog :visible.sync="visible"  title="前往">
-    <el-input id="searchInput" v-model="input" placeholder="请输入内容"></el-input>
-    <div id="searchResult"></div>
+  
 
-    <br>
-    <div id="Menu">
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/">首页</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/archive/">归档</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/about/">关于</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/ly/">留言</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/categories/">分类</el-link></el-button></div>
-      <div class="grid-content bg-purple"><el-button><el-link :underline="false" href="/tages/">标签</el-link></el-button></div>
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="垃圾收集器和内存分配"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2019-11-14 18:51" pubdate>
+          2019年11月14日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          37 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
     </div>
 
-</el-dialog>
-
-<el-link href="#top"  id="toTop" class="show" :underline="false" icon="el-icon-top" ></el-link>
-
-
-
-        
-        <div id="title">
-            <h1>
-                垃圾收集器和内存分配<br>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">垃圾收集器和内存分配</h1>
+            
+            
+              <div class="markdown-body">
                 
-                <p>作者：wz<br>编写：2019-11-14</p>
-            </h1>
-        </div>
-        
-
-        <div id="article">
-            <meta name="referrer" content="no-referrer">
+                <meta name="referrer" content="no-referrer" />
 
 <ul>
 <li><h4 id="判断对象是否还存活"><a href="#判断对象是否还存活" class="headerlink" title="判断对象是否还存活"></a>判断对象是否还存活</h4><ul>
 <li><p>引用计数法（未被采用，有缺陷）：</p>
 <p>每当有引用时，计数器就加一，当引用失效时，计数器就减一</p>
 <p>通过代码来证明有缺陷：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GcDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//分为6个步骤</span></span><br><span class="line">        GcObject obj1 = <span class="keyword">new</span> GcObject(); <span class="comment">//Step 1</span></span><br><span class="line">        GcObject obj2 = <span class="keyword">new</span> GcObject(); <span class="comment">//Step 2</span></span><br><span class="line"></span><br><span class="line">        obj1.instance = obj2; <span class="comment">//Step 3</span></span><br><span class="line">        obj2.instance = obj1; <span class="comment">//Step 4</span></span><br><span class="line"></span><br><span class="line">        obj1 = <span class="keyword">null</span>; <span class="comment">//Step 5</span></span><br><span class="line">        obj2 = <span class="keyword">null</span>; <span class="comment">//Step 6</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GcObject</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> Object instance = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">GcDemo</span> &#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        <span class="hljs-comment">//分为6个步骤</span><br>        <span class="hljs-type">GcObject</span> <span class="hljs-variable">obj1</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">GcObject</span>(); <span class="hljs-comment">//Step 1</span><br>        <span class="hljs-type">GcObject</span> <span class="hljs-variable">obj2</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">GcObject</span>(); <span class="hljs-comment">//Step 2</span><br><br>        obj1.instance = obj2; <span class="hljs-comment">//Step 3</span><br>        obj2.instance = obj1; <span class="hljs-comment">//Step 4</span><br><br>        obj1 = <span class="hljs-literal">null</span>; <span class="hljs-comment">//Step 5</span><br>        obj2 = <span class="hljs-literal">null</span>; <span class="hljs-comment">//Step 6</span><br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">GcObject</span>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-type">Object</span> <span class="hljs-variable">instance</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>Step1：GcObject实例1的引用计数加“1，实例1的引用计数&#x3D;1；</p>
+</li>
+<li><p>Step2：GcObject实例2的引用计数加1，实例2的引用计数&#x3D;1；</p>
+</li>
+<li><p>Step3：GcObject实例2的引用计数再加1，实例2的引用计数&#x3D;2；</p>
+</li>
+<li><p>Step4：GcObject实例1的引用计数再加1，实例1的引用计数&#x3D;2；</p>
+</li>
+<li><p>Step5：栈帧中obj1不再指向Java堆，GcObject实例1的引用计数减1，结果为1；</p>
+</li>
+<li><p>Step6：栈帧中obj2不再指向Java堆，GcObject实例2的引用计数减1，结果为1。</p>
 </li>
 </ul>
+<p>这样便得不到释放，从而导致内存泄露</p>
 </li>
-</ul>
-<pre><code>- Step1：GcObject实例1的引用计数加“1，实例1的引用计数=1；
-- Step2：GcObject实例2的引用计数加1，实例2的引用计数=1；
-- Step3：GcObject实例2的引用计数再加1，实例2的引用计数=2；
-- Step4：GcObject实例1的引用计数再加1，实例1的引用计数=2；
-
-- Step5：栈帧中obj1不再指向Java堆，GcObject实例1的引用计数减1，结果为1；
-- Step6：栈帧中obj2不再指向Java堆，GcObject实例2的引用计数减1，结果为1。
-
-这样便得不到释放，从而导致内存泄露
-</code></pre><ul>
 <li><p>可达性分析算法：</p>
 <p>通过一系列的成为GC Root的对象作为起始点，从这些节点开始向下搜索，搜索过的路径叫做引用链，当一个对象到GC Root没有任何引用链链接，就可以证明此对象是不可用的了</p>
 <p>在Java语言中，可作为GC Root的对象包括以下几种：</p>
@@ -109,12 +318,12 @@
 </li>
 <li><p>引用分类：</p>
 <ul>
-<li><p>强引用：Dog dog = new Dog();这种只要强引用还在，垃圾处理器永远不会回收掉被引用的对象</p>
+<li><p>强引用：Dog dog &#x3D; new Dog();这种只要强引用还在，垃圾处理器永远不会回收掉被引用的对象</p>
 </li>
 <li><p>软引用：有用但非必须的对象，这种对象，在系统要发生内存溢出异常之前，会把这些对象进行二次回收，要是还是没有足够内存才抛出异常，可以用来实现高速缓存</p>
-<p>  <img src="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg" alt="Snipaste_2019-07-28_21-17-09"></p>
+<p>  <img src="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-28_21-17-09"></p>
 <ul>
-<li><p>弱引用：用来描述非必需的对象的，比软引用更弱，被弱引用关联的对象只能生存到下一次垃圾收集前，只要垃圾回收工作就会把这部分给回收掉 dog = null</p>
+<li><p>弱引用：用来描述非必需的对象的，比软引用更弱，被弱引用关联的对象只能生存到下一次垃圾收集前，只要垃圾回收工作就会把这部分给回收掉 dog &#x3D; null</p>
 </li>
 <li><p>虚拟引用：对生存时间没有任何影响，他的作用是能在对象被回收时，收到一个系统通知</p>
 </li>
@@ -136,7 +345,7 @@
 </ul>
 </li>
 </ul>
-<ul>
+</li>
 <li><h4 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h4><ul>
 <li><p>标记-清除算法</p>
 <ol>
@@ -172,28 +381,28 @@
 </ul>
 </li>
 <li><h4 id="垃圾处理器"><a href="#垃圾处理器" class="headerlink" title="垃圾处理器"></a>垃圾处理器</h4><p>根据年轻代还是老年代来使用不同的垃圾处理器</p>
-<p><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5alkikkvpj30b207yq33.jpg" alt="Snipaste_2019-07-24_07-54-56"></p>
+<p><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5alkikkvpj30b207yq33.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-24_07-54-56"></p>
 <p>​     </p>
 <ul>
 <li><p>年轻代：</p>
 <ol>
 <li>Serial收集器（-XX:+UseSerialGC,复制算法）clien模式下年轻代默认的<ul>
 <li>单线程收集，进行垃圾回收时，必须暂停所有工作线程</li>
-<li>简单高效，Client模式下默认的年轻代处理器<img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5alo7zj7yj30ya0f2wfv.jpg" alt="Snipaste_2019-07-24_07-59-13"></li>
+<li>简单高效，Client模式下默认的年轻代处理器<img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5alo7zj7yj30ya0f2wfv.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-24_07-59-13"></li>
 </ul>
 </li>
 <li>ParNew收集器（-XX:+UseParNewGC,复制算法）Server模式下年轻代首选收集器<ul>
 <li>多线程收集，其他和Serial收集器一样，除Serial外只有它能与CMS收集器配合工作</li>
 <li>单核执行效率不如Serial，在多核下执行才有优势</li>
-<li><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5br4idhlsj30z90ez75j.jpg" alt="Snipaste_2019-07-25_07-52-53"></li>
+<li><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5br4idhlsj30z90ez75j.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-25_07-52-53"></li>
 </ul>
 </li>
 <li>Parallel Scavenge收集器（-XX:+UseParallelGC，复制算法）并行<ul>
-<li>吞吐量=运行用户代码时间/（运行用户代码时间+垃圾收集时间）</li>
+<li>吞吐量&#x3D;运行用户代码时间&#x2F;（运行用户代码时间+垃圾收集时间）</li>
 <li>比起关注用户线程的停顿时间，更关注系统的吞吐量（适合在后台，而不是太多交互）</li>
 <li>在多核下执行才有优势，Server模式下默认的年轻代处理器</li>
 <li>处于一个比较尴尬的状态新生代选择了Parallel Scavenge 后老年代除了SerialOld收集器外无其他选择</li>
-<li><img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5fr8sn2x0j30z60euabd.jpg" alt="Snipaste_2019-07-25_08-02-07"></li>
+<li><img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5fr8sn2x0j30z60euabd.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-25_08-02-07"></li>
 </ul>
 </li>
 </ol>
@@ -217,8 +426,8 @@
 <p>垃圾回收线程几乎可以做到与用户线程同时工作，是一种获取最短回收时间为目标的收集器</p>
 <p>有更多存活时间的对象</p>
 <p>步骤：</p>
-<p>​    初始标记-并发标记（并发追溯标记，程序不会停顿）-并发预处理（查找执行并发标记阶段从年轻代晋升到老年的的对象）-重新标记（暂停虚拟机，扫描CMS堆中的剩余对象）-并发清除（清理垃圾对象，程序不会停顿）-并发重置（重置cms收集器的数据结构）</p>
-<p><img src="http://ww1.sinaimg.cn/large/006tNc79ly1g5ft5omtvjj30iy0573yp.jpg" alt="Snipaste_2019-07-28_20-04-57"></p>
+<p>​	初始标记-并发标记（并发追溯标记，程序不会停顿）-并发预处理（查找执行并发标记阶段从年轻代晋升到老年的的对象）-重新标记（暂停虚拟机，扫描CMS堆中的剩余对象）-并发清除（清理垃圾对象，程序不会停顿）-并发重置（重置cms收集器的数据结构）</p>
+<p><img src="http://ww1.sinaimg.cn/large/006tNc79ly1g5ft5omtvjj30iy0573yp.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-28_20-04-57"></p>
 </li>
 <li><p>G1收集器（-XX:+UseG1GC,复制+标记-整理算法）</p>
 <ul>
@@ -246,16 +455,15 @@
 </li>
 <li><p>长期存活的对象直接进入老年代</p>
 <p>虚拟机给每个对象设定年龄，，如果对象在Eden出生并且经过第一次Minor GC后仍然存活，并且能被survivor容纳的话，就被移动到Survivor中，并且年龄设为1，每熬过一次MinorGC年龄就会加1，达到要求就可以进入老年代了</p>
-<ol start="4">
-<li>动态对象年龄判定</li>
+</li>
+<li><p>动态对象年龄判定</p>
+</li>
 </ol>
-<p>如果相同年龄所有对象大小总和大于Survivor空间的一半，年龄大于或等于该年龄的对象就可以直接进入老年代，不用达到设置年龄</p>
+<p>   如果相同年龄所有对象大小总和大于Survivor空间的一半，年龄大于或等于该年龄的对象就可以直接进入老年代，不用达到设置年龄</p>
 <ol start="5">
 <li>空间分配担保</li>
 </ol>
-<p>在Minor GC之前，虚拟机会检查老年代最大可用的连续空间是否大于新生代所有对象的总空间,如果成立，则操作是安全的，不成立看下是否允许担保失败，如果允许则检查老年代剩余空间是否大于历次的老年代对象的平均水平，如果大于则尝试进行MinorGC，如果小于则，要进行一次Full GC</p>
-</li>
-</ol>
+<p>   在Minor GC之前，虚拟机会检查老年代最大可用的连续空间是否大于新生代所有对象的总空间,如果成立，则操作是安全的，不成立看下是否允许担保失败，如果允许则检查老年代剩余空间是否大于历次的老年代对象的平均水平，如果大于则尝试进行MinorGC，如果小于则，要进行一次Full GC</p>
 </li>
 <li><h4 id="常见面试题总结"><a href="#常见面试题总结" class="headerlink" title="常见面试题总结"></a>常见面试题总结</h4><ol>
 <li><p>finalize是否与c++中的析构函数相同</p>
@@ -266,81 +474,357 @@
 </li>
 <li><p>优先级比较低，触发该方法后可能随时被终止</p>
 </li>
-<li>给予对象最后一次重生机会</li>
+<li><p>给予对象最后一次重生机会</p>
+</li>
 </ul>
 <p>例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Finalization</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Finalization finalization;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Finalized"</span>);</span><br><span class="line">        finalization = <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Finalization f = <span class="keyword">new</span> Finalization();</span><br><span class="line">        System.out.println(<span class="string">"First print: "</span> + f);</span><br><span class="line">        f = <span class="keyword">null</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">        <span class="keyword">try</span> &#123;<span class="comment">// 休息一段时间，让上面的垃圾回收线程执行完成</span></span><br><span class="line">            Thread.currentThread().sleep(<span class="number">1000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">"Second print: "</span> + f);</span><br><span class="line">        System.out.println(f.finalization);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Finalization</span> &#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Finalization finalization;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">finalize</span><span class="hljs-params">()</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;Finalized&quot;</span>);<br>        finalization = <span class="hljs-built_in">this</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        <span class="hljs-type">Finalization</span> <span class="hljs-variable">f</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Finalization</span>();<br>        System.out.println(<span class="hljs-string">&quot;First print: &quot;</span> + f);<br>        f = <span class="hljs-literal">null</span>;<br>        System.gc();<br>        <span class="hljs-keyword">try</span> &#123;<span class="hljs-comment">// 休息一段时间，让上面的垃圾回收线程执行完成</span><br>            Thread.currentThread().sleep(<span class="hljs-number">1000</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e)&#123;<br>            e.printStackTrace();<br>        &#125;<br>        System.out.println(<span class="hljs-string">&quot;Second print: &quot;</span> + f);<br>        System.out.println(f.finalization);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>Java中的强引用，软引用，弱引用，虚引用有什么用</p>
 </li>
 </ol>
 </li>
 </ul>
-<ol start="2">
-<li>Java中的强引用，软引用，弱引用，虚引用有什么用</li>
-</ol>
-<p>参考：<a href="https://blog.csdn.net/LAMP_zy/article/details/53212909" target="_blank" rel="noopener">https://blog.csdn.net/LAMP_zy/article/details/53212909</a>                   </p>
-   
-            <br>
-            <hr><br>
-            
-                <div id="article-previous">
-                    <a href="/2019/11/15/Java内存模型/" data-toggle="tooltip" data-placement="top" title="Java内存模型">&larr; 上一篇</a>
-                </div>
-                
-                
-                <div id="article-next">
-                    <a href="/2019/11/14/虚拟机类加载/" data-toggle="tooltip" data-placement="top" title="虚拟机类加载">下一篇 &rarr;</a>
-                </div>
-            
-            <br><br>
-            <hr>
-        </div>
-    </div>
+<p>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/LAMP_zy/article/details/53212909">https://blog.csdn.net/LAMP_zy/article/details/53212909</a>                   </p>
 
-    <div id="comment">
-        
-        
-    <h2>留言</h2>
-    <div id="vcomments">
-    </div>
-    <script>
-        var valine = new Valine({
-        el: '#vcomments', 
-        appId: 'HfM9lGHkjvrCY4Y00sfk4TbY-gzGzoHsz',
-        appKey: 'yzGGVla3JWB1CeQ6dIECEGVc',
-    
-        emojiCDN: 'https://i0.hdslb.com/bfs/emote/', 
-        emojiMaps: {
-          "tv_doge": "6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png",
-          "tv_亲亲": "a8111ad55953ef5e3be3327ef94eb4a39d535d06.png",
-          "tv_偷笑": "bb690d4107620f1c15cff29509db529a73aee261.png",
-          "tv_再见": "180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png",
-          "tv_冷漠": "b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png",
-          "tv_发怒": "34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png",
-          "tv_发财": "34db290afd2963723c6eb3c4560667db7253a21a.png",
-          "tv_可爱": "9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png",
-          "tv_吐血": "09dd16a7aa59b77baa1155d47484409624470c77.png",
-          "tv_呆": "fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png",
-          "tv_呕吐": "9f996894a39e282ccf5e66856af49483f81870f3.png",
-          "tv_困": "241ee304e44c0af029adceb294399391e4737ef2.png",
-          "tv_坏笑": "1f0b87f731a671079842116e0991c91c2c88645a.png",
-          "tv_大佬": "093c1e2c490161aca397afc45573c877cdead616.png",
-          "tv_大哭": "23269aeb35f99daee28dda129676f6e9ea87934f.png",
-          "tv_委屈": "d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png",
-          "tv_害羞": "a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png",
-          "tv_尴尬": "7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png",
-          "tv_微笑": "70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png",
-          "tv_思考": "90cf159733e558137ed20aa04d09964436f618a1.png",
-          "tv_惊吓": "0d15c7e2ee58e935adc6a7193ee042388adc22af.png",
-        }
-    })
-    </script>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
 
+<span class="category-chains">
+  
+  
     
+      <span class="category-chain">
+        
+  <a href="/categories/JVM/" class="category-chain-item">JVM</a>
+  
+  
+
+      </span>
     
-    
-     
+  
+</span>
+
     </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/">#Java</a>
+      
+        <a href="/tags/JVM/">#JVM</a>
+      
+    </div>
+  
 </div>
-    <script src="/Module/main.js"></script>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>垃圾收集器和内存分配</div>
+      <div>http://yoursite.com/2019/11/14/垃圾收集器和内存分配/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>wz</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2019年11月14日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/11/15/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/" title="Java内存模型">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java内存模型</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2019/11/14/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%B1%BB%E5%8A%A0%E8%BD%BD/" title="虚拟机类加载">
+                        <span class="hidden-mobile">虚拟机类加载</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>
