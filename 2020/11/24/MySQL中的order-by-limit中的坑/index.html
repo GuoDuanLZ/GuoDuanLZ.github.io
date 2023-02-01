@@ -23,19 +23,19 @@
 <meta property="og:site_name" content="果断的荔枝">
 <meta property="og:description" content="最近在工作中第二次遇到order by limit中数据重复问题，第一次遇到草草解决没做记录，导致第二次遇到完全没想起来，再一再二不再三，在这片文章中我会重现一下问题，然后结合官方文档和其他资料分析下原因。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222448222.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222515568.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222626059.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222657960.png">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl15vxmqz4j30x40o2qb9.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl15zwg8q1j30kk0con0t.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl16gjp5j9j30k007aq4k.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl16iak3arj311u0c4afi.jpg">
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl17m9s7urj31ai02umy8.jpg">
 <meta property="article:published_time" content="2020-11-24T01:53:59.000Z">
-<meta property="article:modified_time" content="2023-02-01T14:52:51.662Z">
+<meta property="article:modified_time" content="2023-02-01T15:07:12.620Z">
 <meta property="article:author" content="wz">
 <meta property="article:tag" content="坑">
 <meta property="article:tag" content="MySQL">
 <meta property="article:tag" content="日常问题">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222448222.png">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/0081Kckwly1gl15vxmqz4j30x40o2qb9.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -295,18 +295,20 @@
 ### 情景复现
 
 <p>首先我们有一张表，如下所示</p>
-<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222448222.png" srcset="/img/loading.gif" lazyload alt="picture 1">  </p>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl15vxmqz4j30x40o2qb9.jpg" srcset="/img/loading.gif" lazyload alt="image-20201125092848563"></p>
 <p>其中是按照amout进行升序排序的，此时我们想要查询按照amout升序排序前十条数据：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> `<span class="hljs-keyword">order</span>` <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> amout LIMIT <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
 
-<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222515568.png" srcset="/img/loading.gif" lazyload alt="picture 2">  </p>
+<img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl15zwg8q1j30kk0con0t.jpg" srcset="/img/loading.gif" lazyload alt="image-20201125093238340" style="zoom:50%;" />
+
 <p>然后我们继续查询下一页的5条数据，sql如下：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> `<span class="hljs-keyword">order</span>` <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> amout LIMIT <span class="hljs-number">5</span> <span class="hljs-keyword">OFFSET</span> <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
 
 <p>结果如下：</p>
-<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222626059.png" srcset="/img/loading.gif" lazyload alt="picture 3">  </p>
+<img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl16gjp5j9j30k007aq4k.jpg" srcset="/img/loading.gif" lazyload alt="image-20201125094838747" style="zoom:67%;" />
+
 <p>然后把两张图片放到一起比较一下</p>
-<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/MySQL%E4%B8%AD%E7%9A%84order-by-limit%E4%B8%AD%E7%9A%84%E5%9D%91/IMG_20230201-222657960.png" srcset="/img/loading.gif" lazyload alt="picture 4">  </p>
+<p><img src="https://tva1.sinaimg.cn/large/0081Kckwly1gl16iak3arj311u0c4afi.jpg" srcset="/img/loading.gif" lazyload alt="image-20201125095018710"></p>
 <p>注意看红框中的数据，会发现id为221的这个数据重复出现了，这其实不符合我们所想的。</p>
 <h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><p>那原因是什么呢？在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.6/en/limit-optimization.html">这片官方文档中有解释</a>：</p>
 <figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs markdown">If you combine LIMIT row<span class="hljs-emphasis">_count with ORDER BY, MySQL stops sorting as soon as it has found the first row_</span>count rows of the sorted result, rather than sorting the entire result. If ordering is done by using an index, this is very fast. If a filesort must be done, all rows that match the query without the LIMIT clause are selected, and most or all of them are sorted, before the first row<span class="hljs-emphasis">_count are found. After the initial rows have been found, MySQL does not sort any remainder of the result set.</span><br><span class="hljs-emphasis"></span><br><span class="hljs-emphasis">One manifestation of this behavior is that an ORDER BY query with and without LIMIT may return rows in different order, as described later in this section.</span><br></code></pre></td></tr></table></figure>
