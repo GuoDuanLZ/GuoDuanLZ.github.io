@@ -21,23 +21,22 @@
 <meta property="og:url" content="http://yoursite.com/2019/11/14/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/index.html">
 <meta property="og:site_name" content="果断的荔枝">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/IMG_20230201-221928042.png">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/006tNc79ly1g4z57uq8ugj30u00xm3zt.jpg">
 <meta property="og:image" content="http://ww2.sinaimg.cn/large/006tNc79ly1g5vvy0etltj30pf0f7dip.jpg">
 <meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5vw4w4ye3j30py0jen6g.jpg">
 <meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5vw587u7gj313s0ittfa.jpg">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g4zhitew35j30ms0ba7g7.jpg">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g4zhjjcby9j30n60bmwqj.jpg">
-<meta property="og:image" content="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwxrkg0fj31070lgdvw.jpg">
-<meta property="og:image" content="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwzax7s1j31f90h9wly.jpg">
-<meta property="og:image" content="https://ww2.sinaimg.cn/large/006tNc79ly1g5vwyau6kqj30zn0iqgw9.jpg">
-<meta property="og:image" content="https://ww3.sinaimg.cn/large/006tNc79ly1g5vx0tlzv2j31fq0k8k16.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222138313.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222247520.png">
 <meta property="article:published_time" content="2019-11-14T10:04:07.000Z">
-<meta property="article:modified_time" content="2020-06-05T02:46:33.000Z">
+<meta property="article:modified_time" content="2023-02-01T14:52:53.964Z">
 <meta property="article:author" content="wz">
 <meta property="article:tag" content="Java">
 <meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/006tNc79ly1g4z57uq8ugj30u00xm3zt.jpg">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/IMG_20230201-221928042.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -231,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.8k 字
         
       </span>
     
@@ -242,7 +241,7 @@
         
         
         
-          22 分钟
+          24 分钟
         
       </span>
     
@@ -312,16 +311,24 @@
 <li><h4 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h4><ul>
 <li><p>Java虚拟机栈：</p>
 <ol>
-<li><p>简介：</p>
-<p>Java虚拟机栈也是 <strong>线程私有</strong> 的，是用来描述Java方法执行的内存模型：每个方法执行的同时都会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等信息，每个方法从调用到执行完成，对应着一个栈帧从入栈到出栈的过程。</p>
-<p>通常把JVM内存区域分为堆和栈的这个栈值得是虚拟机栈中的局部变量表部分：存放了各种基本数据类型，对象的引用。其中，64位长度的long和double类型会占两个局部变量空间，其余数据类型占一个。局部变量表所需要的内存空间在编译期间完成分配的，当进入一个方法时，这个方法需要在帧中分配多大的局部变量空间是完全确定的，并且方法运行期间不会改变变量表的大小</p>
-</li>
-<li><p>异常：</p>
-<p>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError错误，原因基本是因为深度递归、死循环或定义大量的本地变量导致，栈大小通过-Xss（每个线程的栈大小，也可以说是虚拟机的最小栈分配单位）来进行设置，一般设置大小为1M足够</p>
-<p>虚拟机栈可动态扩展时，当无法申请到足够的内存时，会抛出OutOfMemoryError异常，JVM栈空间被线程分割的一块一块的，如果有线程没有栈空间可以分配了会抛出OutOfMemoryError异常，很多线程等待，一直不释放，通过-Xss给每个线程分配的空间加起来大于Jvm的内存空间</p>
-</li>
+<li>简介：</li>
 </ol>
 </li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/IMG_20230201-221928042.png" srcset="/img/loading.gif" lazyload alt="picture 1">  </p>
+<pre><code class="hljs">   Java虚拟机栈也是 **线程私有** 的，是用来描述Java方法执行的内存模型：每个方法执行的同时都会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等信息，每个方法从调用到执行完成，对应着一个栈帧从入栈到出栈的过程。
+
+   通常把JVM内存区域分为堆和栈的这个栈值得是虚拟机栈中的局部变量表部分：存放了各种基本数据类型，对象的引用。其中，64位长度的long和double类型会占两个局部变量空间，其余数据类型占一个。局部变量表所需要的内存空间在编译期间完成分配的，当进入一个方法时，这个方法需要在帧中分配多大的局部变量空间是完全确定的，并且方法运行期间不会改变变量表的大小
+
+2. 异常：
+
+   如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError错误，原因基本是因为深度递归、死循环或定义大量的本地变量导致，栈大小通过-Xss（每个线程的栈大小，也可以说是虚拟机的最小栈分配单位）来进行设置，一般设置大小为1M足够
+
+   虚拟机栈可动态扩展时，当无法申请到足够的内存时，会抛出OutOfMemoryError异常，JVM栈空间被线程分割的一块一块的，如果有线程没有栈空间可以分配了会抛出OutOfMemoryError异常，很多线程等待，一直不释放，通过-Xss给每个线程分配的空间加起来大于Jvm的内存空间
+</code></pre>
+<ul>
 <li><p>本地方法栈：</p>
 <ol>
 <li><p>简介：</p>
@@ -331,8 +338,6 @@
 <p>异常同上</p>
 </li>
 </ol>
-</li>
-</ul>
 </li>
 <li><h4 id="Java堆"><a href="#Java堆" class="headerlink" title="Java堆"></a>Java堆</h4><ol>
 <li><p>简介：</p>
@@ -427,15 +432,15 @@
 <li>永久代会为GC带来不必要的复杂性</li>
 </ul>
 <p>intern方法：</p>
-<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwxrkg0fj31070lgdvw.jpg" srcset="/img/loading.gif" lazyload alt="image-20190811182613179"></p>
-<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwzax7s1j31f90h9wly.jpg" srcset="/img/loading.gif" lazyload alt="image-20190811182750415"></p>
-<p><img src="https://ww2.sinaimg.cn/large/006tNc79ly1g5vwyau6kqj30zn0iqgw9.jpg" srcset="/img/loading.gif" lazyload alt="image-20190811182652997"></p>
-<p><img src="https://ww3.sinaimg.cn/large/006tNc79ly1g5vx0tlzv2j31fq0k8k16.jpg" srcset="/img/loading.gif" lazyload alt="image-20190811182917740"></p>
+<p>![image-20190811182750415](<a target="_blank" rel="noopener" href="https://ww3.sinaimg.cn/large/006tNc79ly1g5vwzax7s1j31f90h9wly.jpg![picture">https://ww3.sinaimg.cn/large/006tNc79ly1g5vwzax7s1j31f90h9wly.jpg![picture</a> 2](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222101840.png">https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222101840.png</a>)</p>
 </li>
 </ol>
 </li>
-<li><p>参考：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/ebaa1a03c594">https://www.jianshu.com/p/ebaa1a03c594</a></p>
-</li>
+</ul>
+<p>)<img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222138313.png" srcset="/img/loading.gif" lazyload alt="picture 3">  </p>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/JVM%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F/IMG_20230201-222247520.png" srcset="/img/loading.gif" lazyload alt="picture 4">  </p>
+<ul>
+<li>参考：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/ebaa1a03c594">https://www.jianshu.com/p/ebaa1a03c594</a></li>
 </ul>
 
                 

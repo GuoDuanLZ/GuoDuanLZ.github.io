@@ -23,19 +23,19 @@
 <meta property="og:site_name" content="果断的荔枝">
 <meta property="og:description" content="判断对象是否还存活:引用计数法（未被采用，有缺陷）：每当有引用时，计数器就加一，当引用失效时，计数器就减一通过代码来证明有缺陷：可达性分析算法：通过一系列的成为GC Root的对象作为起始点，从这些节点开始向下搜索，搜索过的路径叫做引用链，当一个对象到GC Root没有任何引用链链接，就可以证明此对象是不可用的了">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg">
-<meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g5alkikkvpj30b207yq33.jpg">
-<meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5alo7zj7yj30ya0f2wfv.jpg">
-<meta property="og:image" content="http://ww4.sinaimg.cn/large/006tNc79ly1g5br4idhlsj30z90ez75j.jpg">
-<meta property="og:image" content="http://ww3.sinaimg.cn/large/006tNc79ly1g5fr8sn2x0j30z60euabd.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006tNc79ly1g5ft5omtvjj30iy0573yp.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224326661.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224537481.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224611658.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224712955.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224751153.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224905844.png">
 <meta property="article:published_time" content="2019-11-14T10:51:56.000Z">
-<meta property="article:modified_time" content="2019-11-19T13:30:11.000Z">
+<meta property="article:modified_time" content="2023-02-01T14:52:41.372Z">
 <meta property="article:author" content="wz">
 <meta property="article:tag" content="Java">
 <meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224326661.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -331,13 +331,13 @@
 <li><p>强引用：Dog dog &#x3D; new Dog();这种只要强引用还在，垃圾处理器永远不会回收掉被引用的对象</p>
 </li>
 <li><p>软引用：有用但非必须的对象，这种对象，在系统要发生内存溢出异常之前，会把这些对象进行二次回收，要是还是没有足够内存才抛出异常，可以用来实现高速缓存</p>
-<p>  <img src="http://ww2.sinaimg.cn/large/006tNc79ly1g5fv7v33rcj30rp02yjrm.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-28_21-17-09"></p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224326661.png" srcset="/img/loading.gif" lazyload alt="picture 1">  </p>
 <ul>
 <li><p>弱引用：用来描述非必需的对象的，比软引用更弱，被弱引用关联的对象只能生存到下一次垃圾收集前，只要垃圾回收工作就会把这部分给回收掉 dog &#x3D; null</p>
 </li>
 <li><p>虚拟引用：对生存时间没有任何影响，他的作用是能在对象被回收时，收到一个系统通知</p>
-</li>
-</ul>
 </li>
 <li><p>判断生存还是死亡过程</p>
 <p>真正判断一个对象死亡，需要经历两次标记过程，如果通过可达性分析后发现与GC Root没有关联了，则会被第一次标记，并且进行一次筛选，筛选条件是此对象是否有必要执行finalize()方法，当此对象没有覆盖此方法或者已经被虚拟机调用过了，就没必要再执行了</p>
@@ -391,28 +391,33 @@
 </ul>
 </li>
 <li><h4 id="垃圾处理器"><a href="#垃圾处理器" class="headerlink" title="垃圾处理器"></a>垃圾处理器</h4><p>根据年轻代还是老年代来使用不同的垃圾处理器</p>
-<p><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5alkikkvpj30b207yq33.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-24_07-54-56"></p>
-<p>​     </p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224537481.png" srcset="/img/loading.gif" lazyload alt="picture 2">  </p>
+<p>  ​     </p>
 <ul>
 <li><p>年轻代：</p>
 <ol>
-<li>Serial收集器（-XX:+UseSerialGC,复制算法）clien模式下年轻代默认的<ul>
+<li><p>Serial收集器（-XX:+UseSerialGC,复制算法）clien模式下年轻代默认的</p>
+<ul>
 <li>单线程收集，进行垃圾回收时，必须暂停所有工作线程</li>
-<li>简单高效，Client模式下默认的年轻代处理器<img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5alo7zj7yj30ya0f2wfv.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-24_07-59-13"></li>
+<li>简单高效，Client模式下默认的年轻代处理器<img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224611658.png" srcset="/img/loading.gif" lazyload alt="picture 3"></li>
 </ul>
 </li>
-<li>ParNew收集器（-XX:+UseParNewGC,复制算法）Server模式下年轻代首选收集器<ul>
+<li><p>ParNew收集器（-XX:+UseParNewGC,复制算法）Server模式下年轻代首选收集器</p>
+<ul>
 <li>多线程收集，其他和Serial收集器一样，除Serial外只有它能与CMS收集器配合工作</li>
 <li>单核执行效率不如Serial，在多核下执行才有优势</li>
-<li><img src="http://ww4.sinaimg.cn/large/006tNc79ly1g5br4idhlsj30z90ez75j.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-25_07-52-53"></li>
+<li><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224712955.png" srcset="/img/loading.gif" lazyload alt="picture 4"></li>
 </ul>
 </li>
-<li>Parallel Scavenge收集器（-XX:+UseParallelGC，复制算法）并行<ul>
+<li><p>Parallel Scavenge收集器（-XX:+UseParallelGC，复制算法）并行</p>
+<ul>
 <li>吞吐量&#x3D;运行用户代码时间&#x2F;（运行用户代码时间+垃圾收集时间）</li>
 <li>比起关注用户线程的停顿时间，更关注系统的吞吐量（适合在后台，而不是太多交互）</li>
 <li>在多核下执行才有优势，Server模式下默认的年轻代处理器</li>
 <li>处于一个比较尴尬的状态新生代选择了Parallel Scavenge 后老年代除了SerialOld收集器外无其他选择</li>
-<li><img src="http://ww3.sinaimg.cn/large/006tNc79ly1g5fr8sn2x0j30z60euabd.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-25_08-02-07"></li>
+<li><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224751153.png" srcset="/img/loading.gif" lazyload alt="picture 6"></li>
 </ul>
 </li>
 </ol>
@@ -436,8 +441,7 @@
 <p>垃圾回收线程几乎可以做到与用户线程同时工作，是一种获取最短回收时间为目标的收集器</p>
 <p>有更多存活时间的对象</p>
 <p>步骤：</p>
-<p>​	初始标记-并发标记（并发追溯标记，程序不会停顿）-并发预处理（查找执行并发标记阶段从年轻代晋升到老年的的对象）-重新标记（暂停虚拟机，扫描CMS堆中的剩余对象）-并发清除（清理垃圾对象，程序不会停顿）-并发重置（重置cms收集器的数据结构）</p>
-<p><img src="http://ww1.sinaimg.cn/large/006tNc79ly1g5ft5omtvjj30iy0573yp.jpg" srcset="/img/loading.gif" lazyload alt="Snipaste_2019-07-28_20-04-57"></p>
+<p>​	初始标记-并发标记（并发追溯标记，程序不会停顿）-并发预处理（查找执行并发标记阶段从年轻代晋升到老年的的对象）-重新标记（暂停虚拟机，扫描CMS堆中的剩余对象）-并发清除（清理垃圾对象，程序不会停顿）-并发重置（重置cms收集器的数据结构）<br><img src="https://raw.githubusercontent.com/GuoDuanLZ/GuoDuanLZ.github.io/master/blogImg/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%92%8C%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/IMG_20230201-224905844.png" srcset="/img/loading.gif" lazyload alt="picture 7">  </p>
 </li>
 <li><p>G1收集器（-XX:+UseG1GC,复制+标记-整理算法）</p>
 <ul>
@@ -453,8 +457,6 @@
 </ul>
 </li>
 </ol>
-</li>
-</ul>
 </li>
 <li><h4 id="内存分配与回收策略"><a href="#内存分配与回收策略" class="headerlink" title="内存分配与回收策略"></a>内存分配与回收策略</h4><ol>
 <li><p>对象优先在Eden分配</p>
