@@ -1,0 +1,716 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/lizhi.png">
+  <link rel="icon" href="/img/lizhi.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="在新建表的时候我们经常会遇到tinyint(1)能存多少数字，varchar(32)到底能存多少个汉字等等的疑问，我在建表的时候也遇到了这样的困惑，经查阅资料理清了中间的关系，在此记录一下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL中的数据类型">
+<meta property="og:url" content="http://yoursite.com/2020/11/03/%E6%95%B0%E6%8D%AE%E5%BA%93/MySql/Mysql%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="在新建表的时候我们经常会遇到tinyint(1)能存多少数字，varchar(32)到底能存多少个汉字等等的疑问，我在建表的时候也遇到了这样的困惑，经查阅资料理清了中间的关系，在此记录一下">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-03T02:15:02.000Z">
+<meta property="article:modified_time" content="2020-11-17T15:39:08.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="总结">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>MySQL中的数据类型 - 果断的荔枝</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MySQL中的数据类型"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-11-03 10:15" pubdate>
+          2020年11月3日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">MySQL中的数据类型</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="数字类型"><a href="#数字类型" class="headerlink" title="数字类型"></a>数字类型</h3><p>常用到的数字类型及存储空间如下：</p>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>存储空间</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tinyint</td>
+<td>1 byte</td>
+<td></td>
+</tr>
+<tr>
+<td>smallint</td>
+<td>2 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>mediumint</td>
+<td>3 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>int</td>
+<td>4 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>bigint</td>
+<td>8 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>float</td>
+<td>4 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>double（precision）</td>
+<td>8 bytes</td>
+<td></td>
+</tr>
+<tr>
+<td>decimal（m,d）</td>
+<td>Varies</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="整数类型："><a href="#整数类型：" class="headerlink" title="整数类型："></a>整数类型：</h4><p>​	第一个问题就是上表中的存储空间，其中1 byte &#x3D; 8 位，1 byte能存储的数字大小为-128<del>127之间（-2^(n-1)</del>2^n-1,n为位数），而我们新建表的时候 经常会在数字类型后面跟数字，例如：tinyint(1)，tinyint(4)，int(11)等等，乍一看以为这个数字代表能存储多长的数字，其实并不是这样子的，不管后面的数字是多少，能存储的数字大小是固定的，例如tinyint(1)，tinyint(4)能存储的数字大小都是-128~127之间。</p>
+<p>​	其实这个数字的作用是作为填充使用的，只有列指定了zerofill才是有用的，比如tinyint(4)此时要存一个2，其中查询结果为0002左边用0来填充够4位。这也就解释了我们刚开始说的tinyint(1)能存多少数字的问题</p>
+<p>​	还有一个经常用到的知识点就是整数类型都有可选的unsigned属性，这个表示不允许负值，这样就可以使正数的上限提高一倍，例如我们上面提到的tinyint实用unsigned属性后可存储的范围为0~255。比如我们设置主键自增id时，把id值设为自增，然后设为unsigned是比较常用的用法。</p>
+<h4 id="小数（实数）类型"><a href="#小数（实数）类型" class="headerlink" title="小数（实数）类型"></a>小数（实数）类型</h4><p><strong>我们都知道对于float和double存储小数是会有精度丢失的，这是为什么呢？</strong></p>
+<p>​	对于计算机来说最终存储的数字都是二进制的，所以对于float和double来说，最终也是要转换成二进制，那么对于浮点数的二进制是怎么表示的呢：</p>
+<p>​	首先是整数除2取余，得出结果一直除2，直到为0，然后把余数的结果倒序。然后小数部分，一直乘2取整，直到小数部分为0，然后整数结果正序排序。</p>
+<p>​	比如8.475，整数部分转化为二进制为1000，小数部分转化为二进制为0100001。此时8.475可表示为1000.0100001，对于float类型来说只能存储4byte即为32位数字，但是一个小数转化为二进制，超出32位是很有可能的，当使用double会使范围更大，但是如<strong>8.26</strong>这个数字转化为二进制就会出现小数部分永远也没办法为0出	现循环，但是表示的范围是有限的，所以就导致了精度的丢失。</p>
+<p><strong>MySQL中高精度存储实现</strong></p>
+<p>所以在mysql5.0之后，MySQL不再使用CPU的浮点计算而是MySQL服务器自己实现了一套decimal，把数字打包进一个二进制字符串中（每4个字节存储9个数字），小数点使用一个字节，例如Decimal(18,9)，表示的是小数点前面9个数字，小数点后面9个数字，其中使用9个字节（整数4个小数4个标点1个）</p>
+<p>在实际开发中，我们最好避免使用高精度的实现，一种好的实现是根据业务需求对 数据*10^精度，使用bigint进行存储</p>
+<h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>在字符串类型中，我们最先想到也是最常用的类型应该是varchar类型，经常会使用varchar(32)，varchar(16)类似这样的去表示，经常会带一个数字，那数字代表什么意思呢，varchar(16)和char(16)又有什么区别。</p>
+<h4 id="varchar和char"><a href="#varchar和char" class="headerlink" title="varchar和char"></a>varchar和char</h4><p>varchar和char从名字就可以看出varchar是可变长的，那既然是可变长的，那varchar(16)后面的这个数字又代表什么意思呢？首先，这里的数字和整数类型那里的数字是没关系的，其次，这里的数字也不是指能存储的字节长度是多少，这里的数字就是表示的能存多少个字符的个数，在utf-8的编码中，意味着可以插入多少个中文。并且，虽然指定了数字，对于varchar来说依旧是变长的，存了几个字符就占多少空间，这里数字仅仅是做一个长度的限制。而char(16)则不管有没有存这么多字符，一直会分配这么大的空间。虽然varchar是变长的，对于varchar(16)和varchar(32)存储一个字符串对于空间上是一直的，但是使用更长的列会导致消耗更多的内存。char的上限为255字节，varchar的上限65535字节。</p>
+<p>当我们业务确定这个字段是一个定长并且不变的时候，使用char类型是一个好的方案，比如存储密码的md5值，因为char相比于varchar来说会产生更少的碎片，并且varchar会比char一直多一个字节用于长度的存储。</p>
+<h4 id="varchar和text"><a href="#varchar和text" class="headerlink" title="varchar和text"></a>varchar和text</h4><p>当要存储的字符串太多时，text类型经常会被我们使用，但我们发现varchar的存储上限是很可观的，官方文档有说明varchar和text之间的转换关系：</p>
+<ul>
+<li>大于varchar（255）变为 tinytext</li>
+<li>大于varchar（500）变为 text</li>
+<li>大于varchar（20000）变为 mediumtext</li>
+</ul>
+<p>当超过255的长度后使用text和varchar没什么太大的区别（varchar可以设置默认值，text不可以）</p>
+<h3 id="时间类型"><a href="#时间类型" class="headerlink" title="时间类型"></a>时间类型</h3><h4 id="DateTime和Timestamp"><a href="#DateTime和Timestamp" class="headerlink" title="DateTime和Timestamp"></a>DateTime和Timestamp</h4><p>​	DateTime可以存储从1001年到9999年的的值，精度为秒，使用8个字节进行存储，与时区无关的；而Timestamp是时间戳的意思，保存了从1970年1月1日午夜以来的秒数，使用4个字节进行存储，与时区有关，其中最重要的一个问题是最大可以存储到2038年。Timestamp比DateTime效率更高，不过缺点也是很明显的。</p>
+<p>​	</p>
+<p>​	</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/MySQL/">#MySQL</a>
+      
+        <a href="/tags/%E6%80%BB%E7%BB%93/">#总结</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/11/03/Kotlin/Kotlin%E4%B8%ADasSequence%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" title="Kotlin中asSequence的使用场景">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Kotlin中asSequence的使用场景</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/10/28/%E6%95%B0%E6%8D%AE%E5%BA%93/pg/PostgreSQL-%E4%BB%8EMySQL%E5%88%B0PostgreSQL%E4%B8%80%E4%BA%9B%E4%B9%A0%E6%83%AF%E7%94%A8%E6%B3%95%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" title="PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案">
+                        <span class="hidden-mobile">PostgreSQL-从MySQL到PostgreSQL一些习惯用法的解决方案</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GuoDuanLZ/Blog-Comments');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

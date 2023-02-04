@@ -1,0 +1,703 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/lizhi.png">
+  <link rel="icon" href="/img/lizhi.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Redis锁是一个老生常谈的问题了，正好公司需要一个简单易用并且可靠的分布式锁，就顺带了解了下成熟的方案，并且根据需求封装了一个适合我们的分布式锁。在这个过程发现redis去实现分布式锁好像不一定非要使用setnx，并且setnx也有些问题解决不了，还了解到了RedLock。最终根据我们的需求进行了取舍。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="谈谈Redis分布式锁">
+<meta property="og:url" content="http://yoursite.com/2021/05/17/Redis/%E8%B0%88%E8%B0%88Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="Redis锁是一个老生常谈的问题了，正好公司需要一个简单易用并且可靠的分布式锁，就顺带了解了下成熟的方案，并且根据需求封装了一个适合我们的分布式锁。在这个过程发现redis去实现分布式锁好像不一定非要使用setnx，并且setnx也有些问题解决不了，还了解到了RedLock。最终根据我们的需求进行了取舍。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-17T13:41:04.000Z">
+<meta property="article:modified_time" content="2021-07-08T16:50:38.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="锁">
+<meta property="article:tag" content="Redis">
+<meta property="article:tag" content="分布式">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>谈谈Redis分布式锁 - 果断的荔枝</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="谈谈Redis分布式锁"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-05-17 21:41" pubdate>
+          2021年5月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          50 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">谈谈Redis分布式锁</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <meta name="referrer" content="no-referrer" />
+## 怎么加锁
+
+<p>当我们要给一段代码加锁，要经历如下三步：</p>
+<ol>
+<li>首先要保证要加锁的部分没有被其他人所占领</li>
+<li>在没有被其他人占领的同时要占领下来</li>
+<li>通常我们要给锁设置一个过期时间，防止未能正确释放锁从而导致一直占领锁</li>
+</ol>
+<p>上面三步一定要保证的一点是一定要是一个原子操作，任何一步出错都有可能导致出问题。Redis给我们提供了一个命令setnx，能够一口气实现上面三个步骤。另外如果使用lua脚本不使用setnx也是可以保证上面三步的一个原子性的。</p>
+<h2 id="Redis分布式锁需要解决的问题及解决方案"><a href="#Redis分布式锁需要解决的问题及解决方案" class="headerlink" title="Redis分布式锁需要解决的问题及解决方案"></a>Redis分布式锁需要解决的问题及解决方案</h2><ul>
+<li><p>处理时间过长导致锁失效</p>
+<p>上面也提到了当我们加锁时是需要给锁设置一个过期时间的，但是我们的业务处理的时间有可能会超过这个时间，尤其是如果有调用其他服务时，例如：在加锁的过程中，A服务去调用B服务，此时B服务压力比较大，响应时间比较长，比我们设置的锁过期时间还要长，这样就会导致当前锁失效，其他请求拿到锁。这里就有小伙伴说了，我设置一个时间很长的锁不久可以了嘛，这样是可以解决大部分问题，但是一旦不能正常解锁，就会这个锁被占用时间很长，这样加过期时间的意义就小了不少。</p>
+<p>解决办法：给加锁操作添加一个续约机制，当到处理时间超过当前加锁时间的2&#x2F;3时，就给当前的锁续约一个时间，只有当去释放这个锁，才算结束。</p>
+</li>
+<li><p>一个请求的锁被另外的请求给处理了</p>
+<p>在不能保证第一个问题时：当A请求的锁过期，此时B请求获取了一把同样key的锁，此时A请求处理完任务要去释放锁，直接把B请求的锁给释放掉了，就出现了问题。</p>
+<p>在能保证第一个问题时：这个续约机制续约的时候需要保证只给自己请求的那个锁进行续约，不然如果A请求的锁的续约线程没有被正确终止，其实任务已经完成，这个key不需要被续约了，但是请求A还是会一直去续约这个key，不管续约的这个锁是不是当前请求的。</p>
+<p>解决办法：基于上面两种情况，我们需要做的是在key一样的前提下区分不同的请求的锁，即给相同key不同请求的value设置不一样的值，比如uuid时间戳都可以。</p>
+</li>
+<li><p>Redis Master节点宕机导致锁丢失</p>
+<p>在主从复制过程中，当一个锁加到了master节点上，在此时还没有同步到slave节点的时候master宕机了，此时这个锁就没了。</p>
+<p>解决办法：单机情况下没办法。当为Redis Cluster情况下，可以看一下官方给出的<a target="_blank" rel="noopener" href="http://redis.cn/topics/distlock.html">RedLock方案</a>，大概就是给多个master加锁成功才算加锁成功。</p>
+</li>
+<li><p>不可重入</p>
+<p>当一个请求已经加锁了，然后又要去请求一个需要相同锁的方法，此时就出现了问题，怎么也获取不到自己持有的锁。。这就是锁不可重入。</p>
+<p>解决办法：需要让锁支持可重入这个特性，那么应该怎么去做呢，大体思想是需要记录当前线程加锁的次数，然后没解锁一次减去一次，直到这个计数归零才算正确解锁。具体做法我了解的有两个，一个是使用threadlocal去记录当前线程的锁的次数。另外一种是加锁使用hash类型，把线程id当作hash的key，value为计数，这个在最后我们会分析。</p>
+</li>
+</ul>
+<h2 id="我们的方案及实现"><a href="#我们的方案及实现" class="headerlink" title="我们的方案及实现"></a>我们的方案及实现</h2><p>通过上面的分析，以及我们自己业务的需求，我们解决了上面的四个问题中的前两个，这两个已经能满足我们的业务的需要，算是在复杂和稳定中找了个我们需求的平衡。</p>
+<p>我们使用的Lettuce Java客户端，主要是因为他支持响应式调用，下面来看一下Kotlin下的实现：</p>
+<p>加锁操作,为了解决上述问题2中的问题，这里的value值我们用的是uuid:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">lock</span><span class="hljs-params">(leaseTime: <span class="hljs-type">Long</span>, timeUnit: <span class="hljs-type">TimeUnit</span>)</span></span>: <span class="hljs-built_in">Boolean</span> &#123;<br>  value = UUID.randomUUID().toString()<br>  <span class="hljs-keyword">return</span> (<br>    redis.reactive().<span class="hljs-keyword">set</span>(key, value, SetArgs().nx().ex(timeUnit.toSeconds(leaseTime)))<br>    .awaitFirstOrNull() != <span class="hljs-literal">null</span><br>  ).also &#123;<br>    <span class="hljs-keyword">if</span> (it) &#123;<br>      renewExpiration(leaseTime, timeUnit)<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>为了解决业务处理时间长锁失效问题进行了续约:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">renewExpiration</span><span class="hljs-params">(leaseTime: <span class="hljs-type">Long</span>, timeUnit: <span class="hljs-type">TimeUnit</span>)</span></span> &#123;<br>  job = GlobalScope.launch(Dispatchers.IO) &#123;<br>    delay(timeUnit.toMillis(leaseTime * <span class="hljs-number">2</span> / <span class="hljs-number">3</span>))<br>    <span class="hljs-keyword">while</span> (!released) &#123;<br>      redis.sync().eval&lt;<span class="hljs-built_in">Long</span>&gt;(<br>        <span class="hljs-string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;expire&#x27;, KEYS[1],ARGV[2]) else return 0 end&quot;</span>,<br>        ScriptOutputType.INTEGER,<br>        arrayOf(key),<br>        value,<br>        leaseTime.toString()<br>      ).takeIf &#123; it == <span class="hljs-number">1L</span> &#125; ?: kotlin.run &#123;<br>        released = <span class="hljs-literal">true</span><br>      &#125;<br>      delay(timeUnit.toMillis(leaseTime * <span class="hljs-number">2</span> / <span class="hljs-number">3</span>))<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里的GlobalScope.launch在Java中可以用守护线程去实现，效果一样，这里使用GlobalScope.launch充分利用了协程的优势，也可以用netty中的timer去实现，redission就是用这种方式实现的，如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> timer = HashedWheelTimer()<br><span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">renewExpiration</span><span class="hljs-params">(key: <span class="hljs-type">String</span>, leaseTime: <span class="hljs-type">Long</span>, timeUnit: <span class="hljs-type">TimeUnit</span>)</span></span> &#123;<br>        <span class="hljs-keyword">val</span> lockInfo = renewExpirationMap[key] ?: <span class="hljs-keyword">return</span><br>        lockInfo.timeout = timer.newTimeout(<br>            &#123;<br>                redis.sync().eval&lt;<span class="hljs-built_in">Long</span>&gt;(<br>                    <span class="hljs-string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;expire&#x27;, KEYS[1],ARGV[2]) else return 0 end&quot;</span>,<br>                    ScriptOutputType.INTEGER,<br>                    arrayOf(key),<br>                    lockInfo.value,<br>                    leaseTime.toString()<br>                ).takeIf &#123; it == <span class="hljs-number">1L</span> &#125;?.let &#123;<br>                    renewExpiration(key, leaseTime, timeUnit)<br>                &#125;<br>            &#125;,<br>            leaseTime * <span class="hljs-number">2</span> / <span class="hljs-number">3</span>, timeUnit<br>        )<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<p>解锁的时候会判断value值，通过lua脚本</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Kotlin"><span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">unlock</span><span class="hljs-params">()</span></span> &#123;<br>  redis.reactive().eval&lt;<span class="hljs-built_in">Long</span>&gt;(<br>    <span class="hljs-string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;del&#x27;, KEYS[1]) else return 0 end&quot;</span>,<br>    ScriptOutputType.INTEGER,<br>    arrayOf(key),<br>    value<br>  ).awaitFirstOrNull().takeIf &#123; it == <span class="hljs-number">1L</span> &#125;?.let &#123;<br>    cancelRenewExpiration()<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>源码在这里可以看到<a target="_blank" rel="noopener" href="https://github.com/GuoDuanLZ/sisyphus/blob/lock/middleware/sisyphus-redis/src/main/kotlin/com/bybutter/sisyphus/middleware/redis/DistributedLock.kt">sisyphus&#x2F;DistributedLock.kt</a></p>
+<h2 id="再来看下可重入性"><a href="#再来看下可重入性" class="headerlink" title="再来看下可重入性"></a>再来看下可重入性</h2><p>我们的分布式锁没有实现可重入性，梳理了下场景好像没哪里用的着，就没有去实现，不过倒是研究了下redission是如何实现可重入性的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs Java">&lt;T&gt; RFuture&lt;T&gt; <span class="hljs-title function_">tryLockInnerAsync</span><span class="hljs-params">(<span class="hljs-type">long</span> waitTime, <span class="hljs-type">long</span> leaseTime, TimeUnit unit, <span class="hljs-type">long</span> threadId, RedisStrictCommand&lt;T&gt; command)</span> &#123;<br>  <span class="hljs-keyword">return</span> evalWriteAsync(getRawName(), LongCodec.INSTANCE, command,<br>                        <span class="hljs-string">&quot;if (redis.call(&#x27;exists&#x27;, KEYS[1]) == 0) then &quot;</span> +<br>                        <span class="hljs-string">&quot;redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[2], 1); &quot;</span> +<br>                        <span class="hljs-string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[1]); &quot;</span> +<br>                        <span class="hljs-string">&quot;return nil; &quot;</span> +<br>                        <span class="hljs-string">&quot;end; &quot;</span> +<br>                        <span class="hljs-string">&quot;if (redis.call(&#x27;hexists&#x27;, KEYS[1], ARGV[2]) == 1) then &quot;</span> +<br>                        <span class="hljs-string">&quot;redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[2], 1); &quot;</span> +<br>                        <span class="hljs-string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[1]); &quot;</span> +<br>                        <span class="hljs-string">&quot;return nil; &quot;</span> +<br>                        <span class="hljs-string">&quot;end; &quot;</span> +<br>                        <span class="hljs-string">&quot;return redis.call(&#x27;pttl&#x27;, KEYS[1]);&quot;</span>,<br>                        Collections.singletonList(getRawName()), unit.toMillis(leaseTime), getLockName(threadId));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>先来看下这个lua脚本的几个变量都代表了什么，KEYS[1]：getRawName()代表锁的key，ARGV[1]：unit.toMillis(leaseTime)代表了过期时间，ARGV[2]：getLockName(threadId)代表了当前锁的value值，来看下这个value是什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">protected</span> String <span class="hljs-title function_">getLockName</span><span class="hljs-params">(<span class="hljs-type">long</span> threadId)</span> &#123;<br>  <span class="hljs-keyword">return</span> id + <span class="hljs-string">&quot;:&quot;</span> + threadId;<br>&#125;<br><span class="hljs-keyword">public</span> <span class="hljs-title function_">RedissonBaseLock</span><span class="hljs-params">(CommandAsyncExecutor commandExecutor, String name)</span> &#123;<br>  <span class="hljs-built_in">super</span>(commandExecutor, name);<br>  <span class="hljs-built_in">this</span>.commandExecutor = commandExecutor;<br>  <span class="hljs-built_in">this</span>.id = commandExecutor.getConnectionManager().getId();<span class="hljs-comment">//id值的获取为当前连接的id</span><br>  <span class="hljs-built_in">this</span>.internalLockLeaseTime = commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout();<br>  <span class="hljs-built_in">this</span>.entryName = id + <span class="hljs-string">&quot;:&quot;</span> + name;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这下我们就可以知道了，锁的Value为当前值的连接id加上当前的线程id就是当前锁的value值。然后我们再来看下脚本的意思：</p>
+<p>当不存在key的时候，这时候是可以进行加锁的，执行了hincrby key value 1 并且设置了过期时间。当这次请求需要重入的时候，即在key存在时，又要去加锁，先判断value是否是一致的（也就是说来确定是重入，而不是其他线程的非法加锁请求，若是其他线程按理说应该加锁失败）一致则进行计数hincrby key value 1 这样就可以记录当前重入的次数了。</p>
+<p>当解锁的时候每次解锁就把重入次数减1，当减到0的时候则直接删除这个key。删除的脚本如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs Java">evalWriteAsync(getRawName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,<br>               <span class="hljs-string">&quot;if (redis.call(&#x27;hexists&#x27;, KEYS[1], ARGV[3]) == 0) then &quot;</span> +<br>               <span class="hljs-string">&quot;return nil;&quot;</span> +<br>               <span class="hljs-string">&quot;end; &quot;</span> +<br>               <span class="hljs-string">&quot;local counter = redis.call(&#x27;hincrby&#x27;, KEYS[1], ARGV[3], -1); &quot;</span> +<br>               <span class="hljs-string">&quot;if (counter &gt; 0) then &quot;</span> +<br>               <span class="hljs-string">&quot;redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[2]); &quot;</span> +<br>               <span class="hljs-string">&quot;return 0; &quot;</span> +<br>               <span class="hljs-string">&quot;else &quot;</span> +<br>               <span class="hljs-string">&quot;redis.call(&#x27;del&#x27;, KEYS[1]); &quot;</span> +<br>               <span class="hljs-string">&quot;redis.call(&#x27;publish&#x27;, KEYS[2], ARGV[1]); &quot;</span> +<br>               <span class="hljs-string">&quot;return 1; &quot;</span> +<br>               <span class="hljs-string">&quot;end; &quot;</span> +<br>               <span class="hljs-string">&quot;return nil;&quot;</span>,<br>               Arrays.asList(getRawName(), getChannelName()), LockPubSub.UNLOCK_MESSAGE, internalLockLeaseTime, getLockName(threadId));<br></code></pre></td></tr></table></figure>
+
+<p>以上就是redission中锁的重入性的实现。redission中的锁做的比较完整，如果对redis锁有比较高的要求的话可以直接使用redission。</p>
+<p>上面就是这次redis分布式锁的分享，如果我上面有写的哪里不准确或者有错误，希望能够给我指出。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Redis/" class="category-chain-item">Redis</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E9%94%81/">#锁</a>
+      
+        <a href="/tags/Redis/">#Redis</a>
+      
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">#分布式</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/23/Redis/Redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-%E5%AD%97%E5%85%B8(dict)/" title="Redis数据结构-字典(dict)">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Redis数据结构-字典(dict)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/04/29/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/RocketMQ/%E3%80%90%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E3%80%91RocketMQ%E6%B6%88%E6%81%AF%E8%BF%BD%E8%B8%AA%E6%BA%90%E7%A0%81%E8%AF%A6%E8%A7%A3/" title="【源码分析】RocketMQ消息追踪源码详解">
+                        <span class="hidden-mobile">【源码分析】RocketMQ消息追踪源码详解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GuoDuanLZ/Blog-Comments');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

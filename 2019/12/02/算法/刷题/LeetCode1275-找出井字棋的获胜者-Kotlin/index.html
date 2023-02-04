@@ -1,0 +1,728 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/lizhi.png">
+  <link rel="icon" href="/img/lizhi.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="给你一个数组 moves，其中每个元素是大小为 2 的另一个数组（元素分别对应网格的行和列），它按照 A 和 B 的行动顺序（先 A 后 B）记录了两人各自的棋子位置。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LeetCode1275-找出井字棋的获胜者 Kotlin">
+<meta property="og:url" content="http://yoursite.com/2019/12/02/%E7%AE%97%E6%B3%95/%E5%88%B7%E9%A2%98/LeetCode1275-%E6%89%BE%E5%87%BA%E4%BA%95%E5%AD%97%E6%A3%8B%E7%9A%84%E8%8E%B7%E8%83%9C%E8%80%85-Kotlin/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="给你一个数组 moves，其中每个元素是大小为 2 的另一个数组（元素分别对应网格的行和列），它按照 A 和 B 的行动顺序（先 A 后 B）记录了两人各自的棋子位置。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-02T02:38:37.000Z">
+<meta property="article:modified_time" content="2019-12-02T15:20:44.000Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="Kotlin">
+<meta property="article:tag" content="LeetCode">
+<meta property="article:tag" content="算法">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="数组">
+<meta property="article:tag" content="位运算">
+<meta property="article:tag" content="165周赛">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LeetCode1275-找出井字棋的获胜者 Kotlin - 果断的荔枝</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LeetCode1275-找出井字棋的获胜者 Kotlin"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2019-12-02 10:38" pubdate>
+          2019年12月2日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          30 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LeetCode1275-找出井字棋的获胜者 Kotlin</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <meta name="referrer" content="no-referrer" />
+> A 和 B 在一个 3 x 3 的网格上玩井字棋。
+>
+> 井字棋游戏的规则如下：
+>
+> 玩家轮流将棋子放在空方格 (" ") 上。
+> 第一个玩家 A 总是用 "X" 作为棋子，而第二个玩家 B 总是用 "O" 作为棋子。
+> "X" 和 "O" 只能放在空方格中，而不能放在已经被占用的方格上。
+> 只要有 3 个相同的（非空）棋子排成一条直线（行、列、对角线）时，游戏结束。
+> 如果所有方块都放满棋子（不为空），游戏也会结束。
+> 游戏结束后，棋子无法再进行任何移动。
+> 给你一个数组 moves，其中每个元素是大小为 2 的另一个数组（元素分别对应网格的行和列），它按照 A 和 B 的行动顺序（先 A 后 B）记录了两人各自的棋子位置。
+>
+> 如果游戏存在获胜者（A 或 B），就返回该游戏的获胜者；如果游戏以平局结束，则返回 "Draw"；如果仍会有行动（游戏未结束），则返回 "Pending"。
+>
+> 你可以假设 moves 都 有效（遵循井字棋规则），网格最初是空的，A 将先行动。
+>
+> <figure class="highlight prolog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs prolog">示例 <span class="hljs-number">1</span>：<br><br>输入：moves = [[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">2</span>]]<br>输出：<span class="hljs-string">&quot;A&quot;</span><br>解释：<span class="hljs-string">&quot;A&quot;</span> 获胜，他总是先走。<br><span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;X  &quot;</span><br><span class="hljs-string">&quot;   &quot;</span> -&gt; <span class="hljs-string">&quot;   &quot;</span> -&gt; <span class="hljs-string">&quot; X &quot;</span> -&gt; <span class="hljs-string">&quot; X &quot;</span> -&gt; <span class="hljs-string">&quot; X &quot;</span><br><span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;O  &quot;</span>    <span class="hljs-string">&quot;O  &quot;</span>    <span class="hljs-string">&quot;OO &quot;</span>    <span class="hljs-string">&quot;OOX&quot;</span><br>示例 <span class="hljs-number">2</span>：<br><br>输入：moves = [[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">0</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>]]<br>输出：<span class="hljs-string">&quot;B&quot;</span><br>解释：<span class="hljs-string">&quot;B&quot;</span> 获胜。<br><span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;X  &quot;</span>    <span class="hljs-string">&quot;XX &quot;</span>    <span class="hljs-string">&quot;XXO&quot;</span>    <span class="hljs-string">&quot;XXO&quot;</span>    <span class="hljs-string">&quot;XXO&quot;</span><br><span class="hljs-string">&quot;   &quot;</span> -&gt; <span class="hljs-string">&quot; O &quot;</span> -&gt; <span class="hljs-string">&quot; O &quot;</span> -&gt; <span class="hljs-string">&quot; O &quot;</span> -&gt; <span class="hljs-string">&quot;XO &quot;</span> -&gt; <span class="hljs-string">&quot;XO &quot;</span> <br><span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;   &quot;</span>    <span class="hljs-string">&quot;O  &quot;</span><br>示例 <span class="hljs-number">3</span>：<br><br>输入：moves = [[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">0</span>,<span class="hljs-number">1</span>],[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">2</span>]]<br>输出：<span class="hljs-string">&quot;Draw&quot;</span><br>输出：由于没有办法再行动，游戏以平局结束。<br><span class="hljs-string">&quot;XXO&quot;</span><br><span class="hljs-string">&quot;OOX&quot;</span><br><span class="hljs-string">&quot;XOX&quot;</span><br>示例 <span class="hljs-number">4</span>：<br><br>输入：moves = [[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]]<br>输出：<span class="hljs-string">&quot;Pending&quot;</span><br>解释：游戏还没有结束。<br><span class="hljs-string">&quot;X  &quot;</span><br><span class="hljs-string">&quot; O &quot;</span><br><span class="hljs-string">&quot;   &quot;</span><br> <br><br>提示：<br><br><span class="hljs-number">1</span> &lt;= moves.length &lt;= <span class="hljs-number">9</span><br>moves[i].length == <span class="hljs-number">2</span><br><span class="hljs-number">0</span> &lt;= moves[i][j] &lt;= <span class="hljs-number">2</span><br>moves 里没有重复的元素。<br>moves 遵循井字棋的规则。<br><br>来源：力扣（<span class="hljs-symbol">LeetCode</span>）<br>链接：https://leetcode-cn.com/problems/find-winner-on-a-tic-tac-toe-game<br></code></pre></td></tr></table></figure>
+>
+> 
+
+<p>题目有点像五子棋，看哪一方先获胜，有一点需要注意，已经明确了此棋盘是一个3*3的棋盘，我看到一个用位运算的题解，我研究了一下，模仿着写了一下，下面是我提交通过的代码</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Solution</span> &#123;<br>    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">tictactoe</span><span class="hljs-params">(moves: <span class="hljs-type">Array</span>&lt;<span class="hljs-type">IntArray</span>&gt;)</span></span>: String &#123;<br>        <span class="hljs-keyword">var</span> a = <span class="hljs-number">0</span><br>        <span class="hljs-keyword">var</span> b = <span class="hljs-number">0</span><br>        <span class="hljs-keyword">val</span> acList = arrayListOf(<span class="hljs-number">7</span>, <span class="hljs-number">56</span>, <span class="hljs-number">448</span>, <span class="hljs-number">73</span>, <span class="hljs-number">146</span>, <span class="hljs-number">292</span>, <span class="hljs-number">273</span>, <span class="hljs-number">84</span>)<br>        <span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> moves.indices) &#123;<br>            <span class="hljs-keyword">if</span> (i % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>) &#123;<br>                a = a xor (<span class="hljs-number">1</span> shl (<span class="hljs-number">3</span> * moves[i][<span class="hljs-number">0</span>] + moves[i][<span class="hljs-number">1</span>]))<br>            &#125;<span class="hljs-keyword">else</span>&#123;<br>                b = b xor (<span class="hljs-number">1</span> shl (<span class="hljs-number">3</span> * moves[i][<span class="hljs-number">0</span>] + moves[i][<span class="hljs-number">1</span>]))<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">for</span> (ac <span class="hljs-keyword">in</span> acList)&#123;<br>            <span class="hljs-keyword">if</span> ((a and ac) == ac)&#123;<br>                <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;A&quot;</span><br>            &#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ((b and ac) == ac)&#123;<br>                <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;B&quot;</span><br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">when</span> &#123;<br>            moves.size == <span class="hljs-number">9</span> -&gt; <span class="hljs-string">&quot;Draw&quot;</span><br>            <span class="hljs-keyword">else</span> -&gt; <span class="hljs-string">&quot;Pending&quot;</span><br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里是题解的链接：<a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/find-winner-on-a-tic-tac-toe-game/solution/java-wei-yun-suan-xiang-jie-shi-yong-wei-yun-suan-/">https://leetcode-cn.com/problems/find-winner-on-a-tic-tac-toe-game/solution/java-wei-yun-suan-xiang-jie-shi-yong-wei-yun-suan-/</a></p>
+<p>抛开题解人的解释，我来根据我自己研究出来的结论分析一下这个解答吧</p>
+<ul>
+<li><p>初始化</p>
+<ul>
+<li><p>首先可以固定的是这个棋盘有9个格子，所以，初始化a用户为000000000 ，b用户为000000000</p>
+</li>
+<li><p>计算棋子在3* 3正方形棋盘中的位置，大家应该都知道就是3*x + y+1（x为横坐标，y为纵坐标）</p>
+</li>
+<li><p>我们把坐标如果用二进制来表示一个九个坐标，则位置1可以表示为：000000001；位置2可以表示为000000010；位置3可以表示为000000100，依次类推</p>
+</li>
+<li><p>所以棋子下落的位置我们可以用二进制来表示这里就用到了位运算，当棋子下落到哪个位置，我们就1左移多少 例如1 &lt;&lt; 0 结果为00000001 ;1&lt;&lt;5 结果为000010000</p>
+</li>
+<li><p>固定格子说明成功的次数是固定的即<strong>3种横+33种竖+22种对角</strong>这里直接借鉴原题解人的方法：</p>
+<ul>
+<li><p>计算举例：{[0,0],[0,1],[0,2]}{[0,0],[0,1],[0,2]}为横的一种赢面，对应的99位二进制数为000000111000000111，即十进制下的7</p>
+</li>
+<li><p>事实上，由对应规则可以得知：</p>
+<ul>
+<li><p>33种横的赢面数字是公比为88的等比数列</p>
+</li>
+<li><p>33种竖的赢面数字是公比为22的等比数列</p>
+</li>
+<li><p>总共只需要计算出44个数字(11种横+11种竖+22种对角)，其余按倍数推导即可</p>
+<p>所有赢面数字分别为7, 56(即7\times 8), 448(即7\times 8^2), 73, 146(即73\times 2), 292(即73\times </p>
+<p>2^2), 273, 847,56(即7×8),448(即7×8^2),73,146(即73×2),292(即73×2^2),273,84</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>开始走棋</p>
+</li>
+<li><p><strong>走棋</strong>：每次走一个棋子都用当前坐标去异或要走的坐标，原因是什么呢，因为我们要走的棋子坐标是唯一的，异或（^）情况是两位相同则为0，不同则为1，其实这里用或（|）也是可以的，因为只要保证此时能够记录下走过的步数就可以。</p>
+<p>举个栗子：a第一次走的1 即000000001 ，第二次走的3即000000100，此时两个异或得到000000101，用或也可以得到相同的结果</p>
+</li>
+<li><p><strong>比较：</strong>把a，b所有走过的步数记下来之后，就要和能够胜利的情况作比较了，这时候使用的是且（&amp;），为什么用&amp;呢？</p>
+<p>  胜利的情况其实分两种情况：第一种是刚好走三步，第二种是走了超过三步；举个栗子000000111和100000111都是胜利了，此时aclist中存的这种情况的胜利是000000111，所以用且（&amp;）即 a &amp; ac &#x3D;&#x3D;ac的情况是胜利</p>
+<ul>
+<li><strong>善后：</strong>还有两种情况两方都没有取胜，此时如果长度两方把棋盘下满则为平局（Draw）若还没有把棋盘下满则显示（Pending）</li>
+</ul>
+<p>以上就是我对此题目的分析，尽量做到通俗易懂，位运算是个很有意思的东西，并且效率出奇的高，所以可以平时多注意使用一下，如有疑问欢迎在下方留言，留言带着自己的邮箱，以便我回复后能够及时的通知到你</p>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/LeetCode/" class="category-chain-item">LeetCode</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Kotlin/">#Kotlin</a>
+      
+        <a href="/tags/LeetCode/">#LeetCode</a>
+      
+        <a href="/tags/%E7%AE%97%E6%B3%95/">#算法</a>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">#数据结构</a>
+      
+        <a href="/tags/%E6%95%B0%E7%BB%84/">#数组</a>
+      
+        <a href="/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/">#位运算</a>
+      
+        <a href="/tags/165%E5%91%A8%E8%B5%9B/">#165周赛</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/03/07/Kotlin/Kotlin-%E6%9E%9A%E4%B8%BE/" title="Kotlin-枚举">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Kotlin-枚举</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2019/11/28/%E7%AE%97%E6%B3%95/%E5%88%B7%E9%A2%98/LeetCode167-%E4%B8%A4%E6%95%B0%E4%B9%8B%E5%92%8C-II-%E8%BE%93%E5%85%A5%E6%9C%89%E5%BA%8F%E6%95%B0%E7%BB%84-Kotlin%E5%AE%9E%E7%8E%B0/" title="LeetCode167-两数之和 II - 输入有序数组 Kotlin实现">
+                        <span class="hidden-mobile">LeetCode167-两数之和 II - 输入有序数组 Kotlin实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GuoDuanLZ/Blog-Comments');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

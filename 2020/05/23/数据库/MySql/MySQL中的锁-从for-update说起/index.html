@@ -1,0 +1,880 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/lizhi.png">
+  <link rel="icon" href="/img/lizhi.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="wz">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="在MySQL中，当我们使用select ... for update的时候有没有想到如果查不到数据的时候到底是加锁还是不加锁，加的是表锁还是行锁，什么情况下会加锁，以及MySQL中到底有多少种锁，都是怎么工作的，下面就让我们带着问题从for update说起">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL中的锁-从for update说起">
+<meta property="og:url" content="http://yoursite.com/2020/05/23/%E6%95%B0%E6%8D%AE%E5%BA%93/MySql/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/index.html">
+<meta property="og:site_name" content="果断的荔枝">
+<meta property="og:description" content="在MySQL中，当我们使用select ... for update的时候有没有想到如果查不到数据的时候到底是加锁还是不加锁，加的是表锁还是行锁，什么情况下会加锁，以及MySQL中到底有多少种锁，都是怎么工作的，下面就让我们带着问题从for update说起">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7vnhv1xj30oo07sjtx.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212823699.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212853271.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212917035.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212944139.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213027226.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213110621.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213214743.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213256265.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213326429.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213354850.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213419467.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213441061.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213504564.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213530376.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213556223.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213622566.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213650227.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213712180.png">
+<meta property="article:published_time" content="2020-05-23T03:39:00.000Z">
+<meta property="article:modified_time" content="2023-02-02T13:37:20.370Z">
+<meta property="article:author" content="wz">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="锁">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7vnhv1xj30oo07sjtx.jpg">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>MySQL中的锁-从for update说起 - 果断的荔枝</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>果断的荔枝</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MySQL中的锁-从for update说起"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-05-23 11:39" pubdate>
+          2020年5月23日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          35 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">MySQL中的锁-从for update说起</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <meta name="referrer" content="no-referrer" />
+### 缘起：
+
+<p>有一张表如下图：</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfh7vnhv1xj30oo07sjtx.jpg" srcset="/img/loading.gif" lazyload alt="image-20200602224524398"></p>
+<p>然后有两种情况进行加锁</p>
+<h4 id="情况一："><a href="#情况一：" class="headerlink" title="情况一："></a>情况一：</h4><table>
+<thead>
+<tr>
+<th align="left">Transaction1</th>
+<th>Transaction2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">begin;</td>
+<td>begin;</td>
+</tr>
+<tr>
+<td align="left">select * from user where mobile &#x3D; “10” for update;(mobile 10 存在)</td>
+<td></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>select * from user where mobile &#x3D; “10” for update;（mobile 10存在） 被锁住了</td>
+</tr>
+<tr>
+<td align="left">commit;</td>
+<td></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>正常执行</td>
+</tr>
+</tbody></table>
+<h4 id="情况二："><a href="#情况二：" class="headerlink" title="情况二："></a>情况二：</h4><table>
+<thead>
+<tr>
+<th align="left">Transaction1</th>
+<th>Transaction2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">begin;</td>
+<td>begin;</td>
+</tr>
+<tr>
+<td align="left">select * from user where mobile &#x3D; “5” for update;(mobile 5 不存在)</td>
+<td></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>select * from user where mobile &#x3D; “5” for update;（mobile 5不存在） 未被锁住</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>select * from user where mobile &#x3D; “4” for update;（mobile 4不存在） 未被锁住</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>select * from user where mobile &#x3D; “6” for update;（mobile 6不存在） 未被锁住</td>
+</tr>
+<tr>
+<td align="left">commit;</td>
+<td></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>正常执行</td>
+</tr>
+</tbody></table>
+<p>从上面的这两个例子可以很容易的给出一个好多人一直以为的错误的结论：当数据存在时，此条数据会被锁住，当数据不存在时，数据不会被锁住。</p>
+<p>但事实真的是这样的嘛，显然不是，上面的例子从一开始就缺少了几个关键条件：哪个<strong>存储引擎</strong>，什么<strong>隔离级别</strong>，加锁字段是否有<strong>索引</strong>，这三个条件是讨论加锁的前提，下面我们就来详细了解一下MySQL中锁的知识</p>
+<h3 id="锁相关基础知识"><a href="#锁相关基础知识" class="headerlink" title="锁相关基础知识"></a>锁相关基础知识</h3><p>本篇文章选用的最常用的InnoDB存储引擎，隔离级别会从常用的**Read Uncommited(RU)<strong>、</strong>Read Committed (RC)<strong>、</strong>Repeatable Read (RR)**三种隔离级别来分析，加锁字段会从唯一索引，普通索引，和没有索引来分析。</p>
+<p>在确定一上问题后，我们需要首先了解的一个事情是InnoDB中锁有哪几种：</p>
+<h4 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h4><p>从官方文档中<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html#innodb-gap-locks%EF%BC%8C%E6%88%91%E4%BB%AC%E5%8F%AF%E4%BB%A5%E6%80%BB%E7%BB%93%E5%87%BA%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%88%86%E4%B8%BA%E4%BB%A5%E4%B8%8B%E5%87%A0%E7%A7%8D%EF%BC%9A">https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html#innodb-gap-locks，我们可以总结出锁的类型分为以下几种：</a></p>
+<ul>
+<li><p>**共享锁(S Lock)**：</p>
+<p>允许持有锁的事务去读取行，如果事务T1对行r拥有S锁，然后，来自不同事务T2的对r行进行锁定的请求将按以下方式处理：</p>
+<ul>
+<li>如果T2对行r加S锁，此时会立刻加上，然后T1和T2都拥有了S锁</li>
+<li>如果T2对行r加X锁，此时将会被阻止</li>
+</ul>
+</li>
+<li><p>**排他锁(X Lock)**：</p>
+<p>允许持有锁的事务去更新或者修改行，如果事务T1对行r拥有X锁，那么来自不同事务T2的不管何种加锁请求都会被拒绝</p>
+</li>
+<li><p>**意向共享锁(IS锁)**：</p>
+<p>在事务给表中某行加S锁之前，必须先给表加IS锁或更强的锁。</p>
+</li>
+<li><p>**意向排他锁(IX锁)**：</p>
+<p>在事务给表中某行加X锁之前，必须先给表加IX锁</p>
+</li>
+</ul>
+<p><strong>意向锁补充</strong>：意向锁简单来讲就是在给行上加锁的时候，先给表加一个意向锁，这个意向锁对于正常的行锁是没有影响的，但是当需要对表进行一些编辑的时候比如加一个字段一类的，这时候如果表中有正在加锁的行，是可以立刻感知到的，需要等待表中没有行加锁才可以进行表的操作，这也是意向锁的最主要作用</p>
+<p>在了解锁的种类后，就需要知道这些锁是怎么被使用的，姑且叫做加锁方式吧，这里介绍常用的三种</p>
+<h4 id="加锁方式："><a href="#加锁方式：" class="headerlink" title="加锁方式："></a>加锁方式：</h4><ul>
+<li><p>**行锁(Record Locks)**：行锁是锁在索引上的一种锁，是把锁加在索引上了，这里需要注意下，好多地方翻译的不清楚，行锁始终锁的都是索引，即使没有定义索引的也是，对于这种情况InnoDB会创建一个隐藏的索引来让它锁</p>
+</li>
+<li><p>**间隙锁(Gap Locks)**：间隙锁是对行锁之前的锁定，为了是防止其他数据来插入进来，引起幻读，当隔离级别为Repeatable Read等级及以上才会有间隙锁，并且对于使用唯一索引来锁定唯一行来锁定行的语句，不需要间隙锁定。</p>
+</li>
+<li><p><strong>Next-Key Locks</strong>：是行锁以及行锁之前的间隙锁组成的（例如：1，2，3；这里所说的”前“的概念是“2”的<strong>前</strong>是“1”）</p>
+</li>
+</ul>
+<p>下面我们来通过for update的例子来看一下加锁情况：</p>
+<h3 id="举例详解"><a href="#举例详解" class="headerlink" title="举例详解"></a>举例详解</h3><p>所用到的表</p>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212823699.png" srcset="/img/loading.gif" lazyload alt="picture 19">  </p>
+<p>有两种不同的隔离等级（RC和RR）的数据库，有两张字段和数据一样的表，其中id为自增主键，uni_index被设置了唯一索引，norm_index设置了普通索引，no_index没有索引，然后我们通过对这两张表加锁进行举例分析，加锁情况在MySQL8.0中可以在performance_schema库中的data_locks表中查看</p>
+<h4 id="走主键或唯一索引加锁情况"><a href="#走主键或唯一索引加锁情况" class="headerlink" title="走主键或唯一索引加锁情况"></a>走主键或唯一索引加锁情况</h4><h5 id="命中一条："><a href="#命中一条：" class="headerlink" title="命中一条："></a>命中一条：</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where uni_index = 10 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212853271.png" srcset="/img/loading.gif" lazyload alt="picture 20">  </p>
+<p>  其中，X,REC_NOT_GAP代表的就是我们上面说的行锁(Record Locks)，此时锁住了id为1这一行，然后给表加了一个意向锁</p>
+<ul>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where uni_index = 10 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212917035.png" srcset="/img/loading.gif" lazyload alt="picture 21">  </p>
+<p>  情况一样</p>
+<h5 id="未命中："><a href="#未命中：" class="headerlink" title="未命中："></a>未命中：</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where uni_index = 100 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-212944139.png" srcset="/img/loading.gif" lazyload alt="picture 22">  </p>
+<p>  仅仅给表加了一个意向锁</p>
+<ul>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where uni_index = 100 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213027226.png" srcset="/img/loading.gif" lazyload alt="picture 23">  </p>
+<p>这里出现了两个陌生东西，一个是LOCK_MODE中的X：代表是加了一个Next-Key Locks，一个是LOCK_DATA中的supremum pseudo-record代表不存在的无穷大的值。</p>
+<p>在这里我们去查询了一个uni_index不存在的且大于表中最大数据的数，所以加了一个Next-Key Locks，而这个Next-Key Locks锁的是一个不存在的无穷大的值，即锁住了表中现存的最大值到不存在无穷大的值中间的间隙和这个不存在无穷大的这一行，其实就是在最大记录后面加了一个间隙锁，如果uni_index&#x3D;11的话，按照推断应该是在10-20之间加一个间隙锁，我们来试一下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where uni_index = 11 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p> <img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213110621.png" srcset="/img/loading.gif" lazyload alt="picture 24">  </p>
+<p>  这里的LOCK_MODE为X,GAP意味着在当前LOCK_DATA前到上一条记录中间加了个间隙锁</p>
+<p>  走唯一索引总结：当走唯一索引时，在命中的情况下RC和RR的表现一致，都是只锁当前唯一行，并且给表加一个意向锁，但是当不命中时RR级别会加一个锁，锁住未命中的那个间隙。</p>
+<h4 id="走普通索引加锁情况"><a href="#走普通索引加锁情况" class="headerlink" title="走普通索引加锁情况"></a>走普通索引加锁情况</h4><h5 id="命中一条：-1"><a href="#命中一条：-1" class="headerlink" title="命中一条："></a>命中一条：</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 100 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213214743.png" srcset="/img/loading.gif" lazyload alt="picture 25">  </p>
+<p>  仅锁住了id为1的这一行，依旧为行锁</p>
+<ul>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 100 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p> <img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213256265.png" srcset="/img/loading.gif" lazyload alt="picture 26">  </p>
+<p>  给命中的那条记录加一个行锁和next-key lock，以及前条记录加一个间隙锁，最终表现为id为1的这条记录的前面和后面都加了间隙锁，本身加了一个行锁</p>
+<h5 id="命中两条："><a href="#命中两条：" class="headerlink" title="命中两条："></a>命中两条：</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 200 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213326429.png" srcset="/img/loading.gif" lazyload alt="picture 27">  </p>
+<p>  给命中记录加行锁</p>
+<ul>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 200 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213354850.png" srcset="/img/loading.gif" lazyload alt="picture 28">  </p>
+<p>  最终表现为(1,4]这个区间被加了锁</p>
+<h5 id="未命中"><a href="#未命中" class="headerlink" title="未命中"></a>未命中</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 201 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213419467.png" srcset="/img/loading.gif" lazyload alt="picture 29">  </p>
+<p>只加了一个意向锁</p>
+</li>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where norm_index = 201 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213441061.png" srcset="/img/loading.gif" lazyload alt="picture 30">  </p>
+<p>和唯一索引加锁情况一致，把没有查询到的这个区间给锁住了</p>
+</li>
+</ul>
+<h4 id="不走索引加锁情况："><a href="#不走索引加锁情况：" class="headerlink" title="不走索引加锁情况："></a>不走索引加锁情况：</h4><h5 id="命中一条：-2"><a href="#命中一条：-2" class="headerlink" title="命中一条："></a>命中一条：</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 1000 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213504564.png" srcset="/img/loading.gif" lazyload alt="picture 31">  </p>
+<p>  仅加了一个行锁</p>
+<ul>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 1000 for update<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213530376.png" srcset="/img/loading.gif" lazyload alt="picture 32">  </p>
+<p>  全部行都加了next-key lock，这意味着无穷小到无穷大都被锁了：1有next-key lock意味着1前面的空隙（无穷小）及1本身被锁了，supremum pseudo-record意味着这个不存在的最大值和5之间的空隙也被锁住了，这种给人的感觉是这整张表都被锁了，其实并不是</p>
+<h5 id="命中两条"><a href="#命中两条" class="headerlink" title="命中两条"></a>命中两条</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 2000 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213556223.png" srcset="/img/loading.gif" lazyload alt="picture 33">  </p>
+<p>好像没啥特殊的，和前面有索引一样，但是实际情况并不是这样的，当没有索引的情况下，MySQL会给所有的行加上行锁，但是在MySQL Server层会把一些不满足条件的给过滤掉了，虽然这违反了二段锁协议的约束，但是却提高了效率。</p>
+</li>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 2000 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213622566.png" srcset="/img/loading.gif" lazyload alt="picture 34">  </p>
+<p>和命中一条一样，把所有行及空隙全锁了</p>
+</li>
+</ul>
+<h5 id="未命中-1"><a href="#未命中-1" class="headerlink" title="未命中"></a>未命中</h5><ul>
+<li><p><strong>RC级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 2001 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213650227.png" srcset="/img/loading.gif" lazyload alt="picture 35">  </p>
+<p>只加了一个意向锁</p>
+</li>
+<li><p><strong>RR级别</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">begin;<br>select * from lock_demo where no_index = 2001 for update<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/GuoDuanLZ/Blog-Comments/main/blogImg/MySQL%E4%B8%AD%E7%9A%84%E9%94%81-%E4%BB%8Efor-update%E8%AF%B4%E8%B5%B7/IMG_20230202-213712180.png" srcset="/img/loading.gif" lazyload alt="picture 36">  </p>
+<p>由此可以看出RR下只要是不走索引，就会把所有的行和间隙都锁掉</p>
+</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>从我们的例子上来看判断锁的情况，首先应该明确隔离等级是什么，然后再看查询字段是否有索引，才能判断出是怎么加的锁；对于加锁的分析一定要学会去看data_locks这张表，理解这几种LOCK_MODE的含义</p>
+<h3 id="扩展："><a href="#扩展：" class="headerlink" title="扩展："></a>扩展：</h3><p>这里有个小小的坑各位小伙伴有兴趣的可以自己试一下：问题是order by limit是怎么加锁的，这应该是order by的坑吧，其实加锁原理还是一样的，分析的时候可以使用explain把语句进行分析一下，然后应该就比较容易了解原因了</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/MySQL/" class="category-chain-item">MySQL</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/MySQL/">#MySQL</a>
+      
+        <a href="/tags/%E9%94%81/">#锁</a>
+      
+    </div>
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/09/18/Kotlin/%E4%BB%8EJava%E5%85%A5%E9%97%A8Kotlin-Kotlin%E7%B1%BB/" title="从Java入门Kotlin-Kotlin类">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">从Java入门Kotlin-Kotlin类</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/03/07/Kotlin/Kotlin-%E6%9E%9A%E4%B8%BE/" title="Kotlin-枚举">
+                        <span class="hidden-mobile">Kotlin-枚举</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GuoDuanLZ/Blog-Comments');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
